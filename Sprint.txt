@@ -1,6 +1,5 @@
-1: add a connection to an sql database so that the player can save their account, account state, and anything else valuable.
-2: add a log out button in the dropdown attached to the profile button.
-3: increase the max garden size. 
-4: add 100 new plants to grow with.
-5: add a feature where unlocking a new plant to buy seeds for costs money.
-6: fix the walking mechanic, to where turns are smooth. left and right buttons should turn you slowly, not imediately a 90 degree turn.
+1: remove the "house button at the bottom of the screen
+2:remove the "WASD/arrows to move · Space to jump · E: interact/attack/sleep · Click plot to plant" from the bottom of the screen after the player has played the game for 1 in game day.
+3: no zombies are spawning in the wilderness on each morning. fix this.
+4: the player is showing no animation when he walks. fix this.
+5: i see no option to use the sword vs the bow. fix this.
