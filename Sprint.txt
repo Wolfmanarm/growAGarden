@@ -1,0 +1,6 @@
+1: add a connection to an sql database so that the player can save their account, account state, and anything else valuable.
+2: add a log out button in the dropdown attached to the profile button.
+3: increase the max garden size. 
+4: add 100 new plants to grow with.
+5: add a feature where unlocking a new plant to buy seeds for costs money.
+6: fix the walking mechanic, to where turns are smooth. left and right buttons should turn you slowly, not imediately a 90 degree turn.

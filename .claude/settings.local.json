@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(mkdir -p \"C:\\\\programming projects\\\\growAGarden\\\\src\")",
+      "Bash(mkdir -p \"C:\\\\programming projects\\\\growAGarden\\\\public\")",
+      "Bash(npm run:*)",
+      "Bash(ls:*)",
+      "Bash(npm install:*)",
+      "Bash(node -e \"require\\(''''@react-three/fiber''''\\)\")",
+      "Bash(curl -s http://localhost:3001/api/health)"
+    ]
+  }
+}
