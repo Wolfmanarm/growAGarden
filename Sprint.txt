@@ -1,5 +1,8 @@
-1: remove the "house button at the bottom of the screen
-2:remove the "WASD/arrows to move · Space to jump · E: interact/attack/sleep · Click plot to plant" from the bottom of the screen after the player has played the game for 1 in game day.
-3: no zombies are spawning in the wilderness on each morning. fix this.
-4: the player is showing no animation when he walks. fix this.
-5: i see no option to use the sword vs the bow. fix this.
+1: when log in doesnt work, everything on the page disapeared. fix this and just show a "wrong username or password" error message.
+2: zombies cannot move during the day. fix this.
+3: fix how the cabin looks.
+4: fix how the shops in the city look.
+5: do not allow zombies to spawn in the farming field.
+6: when the bow is equiped, clicking to attack should throw a small arrow projectile that does the bow damage. it will do damage if it strikes a target within 10 plot spaces. after that the arrow disapears. 
+7: some zombies seem to be invisible. fix this.
+8: make the chpped down trees re-spawn every morning.

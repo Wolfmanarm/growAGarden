@@ -89,6 +89,18 @@ const POTIONS_SHOP = [
   { id: 'medium_potion', name: 'Medium Potion', emoji: '⚗️',  hp: 5,  cost: 100 },
   { id: 'large_potion',  name: 'Large Potion',  emoji: '🫙', hp: 10, cost: 200 },
 ]
+const AXES_SHOP = [
+  { id: 'wooden_axe', name: 'Wooden Axe', emoji: '🪓', chopDamage: 1, cost: 80,   killsRequired: 0 },
+  { id: 'iron_axe',   name: 'Iron Axe',   emoji: '⛏️',  chopDamage: 2, cost: 400,  killsRequired: 3 },
+  { id: 'steel_axe',  name: 'Steel Axe',  emoji: '🔱',  chopDamage: 4, cost: 1500, killsRequired: 8 },
+]
+const SAWMILL_UPGRADES = [
+  { id: 'sawmill_1', name: 'Basic Sawmill',   emoji: '🪚', cost: 500,  woodMult: 1.5, description: '+50% wood from trees.' },
+  { id: 'sawmill_2', name: 'Iron Sawmill',    emoji: '⚙️',  cost: 1500, woodMult: 2.0, description: '2× wood from trees.'   },
+  { id: 'sawmill_3', name: 'Master Sawmill',  emoji: '🏭', cost: 4000, woodMult: 3.0, description: '3× wood from trees.'   },
+]
+const TREE_BASE_REWARD = 25   // petals per tree
+
 const DAY_SECONDS   = 5 * 60   // 5 minutes
 const NIGHT_SECONDS = 2 * 60   // 2 minutes
 
@@ -230,6 +242,9 @@ function hydrateProfile(data) {
   if (data.equippedArmour    == null) data.equippedArmour    = null
   if (data.zombieKills       == null) data.zombieKills       = 0
   if (!data.castleUpgrades)          data.castleUpgrades     = {}
+  if (!data.ownedAxes)               data.ownedAxes           = {}
+  if (data.equippedAxe        == null) data.equippedAxe       = null
+  if (!data.sawmillUpgrades)         data.sawmillUpgrades     = {}
   return data
 }
 
@@ -270,130 +285,91 @@ function defaultProfile(username = '') {
     equippedArmour: null,
     zombieKills: 0,
     castleUpgrades: {},
+    ownedAxes: {},
+    equippedAxe: null,
+    sawmillUpgrades: {},
     outfit: { ...DEFAULT_OUTFIT },
     wardrobeOwned: { ...DEFAULT_WARDROBE_OWNED },
   }
 }
 
-// ─── Login overlay (two-step with password) ───────────────────────────────────
+// ─── Login overlay ────────────────────────────────────────────────────────────
 function LoginOverlay({ onLogin }) {
-  const [step, setStep]       = useState('username')  // 'username' | 'login' | 'register'
-  const [name, setName]       = useState('')
+  const [tab, setTab]           = useState('login')   // 'login' | 'register'
+  const [name, setName]         = useState('')
   const [password, setPassword] = useState('')
-  const [confirm, setConfirm] = useState('')
-  const [checking, setChecking] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
-  const [userExists, setUserExists] = useState(false)
+  const [confirm, setConfirm]   = useState('')
+  const [loading, setLoading]   = useState(false)
+  const [error, setError]       = useState('')
 
-  const handleCheckUsername = async (e) => {
-    e.preventDefault()
-    if (!name.trim()) return
-    setError('')
-    setChecking(true)
-    await checkApi()
-
-    if (apiAvailable) {
-      const info = await apiCheckUser(name.trim())
-      if (info) {
-        setUserExists(info.exists)
-        setStep(info.exists ? 'login' : 'register')
-      } else {
-        // API unreachable — fall through to local
-        setUserExists(false)
-        setStep('register')
-      }
-    } else {
-      // Offline mode: check localStorage
-      const local = loadLocal()
-      if (local?.username?.toLowerCase() === name.trim().toLowerCase()) {
-        setUserExists(true)
-        setStep('login')
-      } else {
-        setUserExists(false)
-        setStep('register')
-      }
-    }
-    setChecking(false)
-  }
+  const inputCls = 'w-full border-2 border-green-200 rounded-xl px-4 py-2.5 text-gray-700 focus:outline-none focus:border-green-400 transition-colors text-sm'
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!password) { setError('Please enter a password.'); return }
-    if (step === 'register' && password !== confirm) { setError('Passwords do not match.'); return }
-    if (step === 'register' && password.length < 4)  { setError('Password must be at least 4 characters.'); return }
+    const u = name.trim()
+    if (!u)       { setError('Please enter a username.'); return }
+    if (!password){ setError('Please enter a password.'); return }
+    if (tab === 'register') {
+      if (password.length < 4) { setError('Password must be at least 4 characters.'); return }
+      if (password !== confirm) { setError('Passwords do not match.'); return }
+    }
     setError('')
     setLoading(true)
-    await onLogin(name.trim(), password, step === 'register')
+    await onLogin(u, password, tab === 'register')
     setLoading(false)
   }
 
   return (
-    <motion.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'linear-gradient(135deg,rgba(240,253,244,.97),rgba(254,252,232,.97) 50%,rgba(252,231,243,.97))' }}
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-    >
-      <motion.div
-        className="bg-white rounded-3xl shadow-2xl p-8 w-full max-w-sm text-center"
-        initial={{ scale: 0.8, y: 40 }} animate={{ scale: 1, y: 0 }}
-        transition={{ type: 'spring', damping: 18 }}
-      >
-        <motion.div className="text-6xl mb-4"
-          animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 2.5 }}>🌸</motion.div>
-        <h1 className="text-3xl font-extrabold text-green-700 mb-1">Grow a Garden</h1>
-        <p className="text-gray-400 text-sm mb-6">A cozy little flower farm</p>
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'linear-gradient(135deg,rgba(240,253,244,.98),rgba(254,252,232,.98) 50%,rgba(252,231,243,.98))' }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden"
+        initial={{ scale: 0.85, y: 40 }} animate={{ scale: 1, y: 0 }}
+        transition={{ type: 'spring', damping: 18 }}>
+        {/* Header */}
+        <div className="text-center pt-8 pb-4 px-8">
+          <motion.div className="text-6xl mb-3"
+            animate={{ y: [0, -8, 0] }} transition={{ repeat: Infinity, duration: 2.5 }}>🌸</motion.div>
+          <h1 className="text-3xl font-extrabold text-green-700">Grow a Garden</h1>
+          <p className="text-gray-400 text-sm mt-1">A cozy little flower farm</p>
+        </div>
 
-        {step === 'username' ? (
-          <form onSubmit={handleCheckUsername} className="space-y-4">
+        {/* Tabs */}
+        <div className="flex border-b border-gray-100 mx-4">
+          {['login','register'].map(t => (
+            <button key={t} onClick={() => { setTab(t); setError('') }}
+              className={`flex-1 py-2.5 text-sm font-bold transition-colors ${tab===t?'text-green-600 border-b-2 border-green-400':'text-gray-400 hover:text-gray-600'}`}>
+              {t === 'login' ? '🔑 Log In' : '🌱 New Account'}
+            </button>
+          ))}
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-3">
+          <div>
+            <label className="block text-xs font-semibold text-green-700 mb-1">Username</label>
+            <input autoFocus type="text" value={name} onChange={e => setName(e.target.value)}
+              placeholder="e.g. Lily, Blossom…" maxLength={20} className={inputCls}/>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-green-700 mb-1">Password</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)}
+              placeholder="At least 4 characters" maxLength={50} className={inputCls}/>
+          </div>
+          {tab === 'register' && (
             <div>
-              <label className="block text-left text-sm font-semibold text-green-700 mb-1">Your name</label>
-              <input autoFocus type="text" value={name} onChange={e => setName(e.target.value)}
-                placeholder="e.g. Lily, Blossom…" maxLength={20}
-                className="w-full border-2 border-green-200 rounded-xl px-4 py-2.5 text-gray-700 focus:outline-none focus:border-green-400 transition-colors" />
+              <label className="block text-xs font-semibold text-green-700 mb-1">Confirm Password</label>
+              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
+                placeholder="Repeat your password" maxLength={50} className={inputCls}/>
             </div>
-            <motion.button type="submit" disabled={!name.trim() || checking}
-              className="w-full bg-gradient-to-r from-green-400 to-emerald-400 text-white font-bold rounded-xl py-3 disabled:opacity-40 shadow-md"
-              whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }}>
-              {checking ? 'Checking…' : 'Continue →'}
-            </motion.button>
-          </form>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-3">
-            <div className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2">
-              <span className="text-green-600 font-bold text-sm">👤 {name}</span>
-              <button type="button" onClick={() => { setStep('username'); setPassword(''); setConfirm(''); setError('') }}
-                className="ml-auto text-xs text-gray-400 hover:text-gray-600">change</button>
-            </div>
-
-            <div className="text-left">
-              <p className="text-sm font-semibold text-gray-500 mb-3">
-                {step === 'login' ? '🔑 Welcome back! Enter your password.' : '🌱 New gardener! Create a password.'}
-              </p>
-              <label className="block text-xs font-semibold text-green-700 mb-1">Password</label>
-              <input autoFocus type="password" value={password} onChange={e => setPassword(e.target.value)}
-                placeholder="At least 4 characters" maxLength={50}
-                className="w-full border-2 border-green-200 rounded-xl px-4 py-2.5 text-gray-700 focus:outline-none focus:border-green-400 transition-colors" />
-            </div>
-
-            {step === 'register' && (
-              <div className="text-left">
-                <label className="block text-xs font-semibold text-green-700 mb-1">Confirm Password</label>
-                <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
-                  placeholder="Repeat password" maxLength={50}
-                  className="w-full border-2 border-green-200 rounded-xl px-4 py-2.5 text-gray-700 focus:outline-none focus:border-green-400 transition-colors" />
-              </div>
-            )}
-
-            {error && <p className="text-red-500 text-xs font-semibold">{error}</p>}
-
-            <motion.button type="submit" disabled={!password || loading}
-              className="w-full bg-gradient-to-r from-green-400 to-emerald-400 text-white font-bold rounded-xl py-3 disabled:opacity-40 shadow-md"
-              whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }}>
-              {loading ? 'Loading…' : step === 'login' ? 'Log In 🌸' : 'Start Gardening 🌱'}
-            </motion.button>
-          </form>
-        )}
+          )}
+          {error && <p className="text-red-500 text-xs font-semibold">{error}</p>}
+          <motion.button type="submit" disabled={loading}
+            className="w-full bg-gradient-to-r from-green-400 to-emerald-500 text-white font-bold rounded-xl py-3 mt-1 disabled:opacity-40 shadow-md"
+            whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.01 }}>
+            {loading ? 'Loading…' : tab === 'login' ? 'Log In 🌸' : 'Create Account 🌱'}
+          </motion.button>
+        </form>
       </motion.div>
     </motion.div>
   )
@@ -443,7 +419,7 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onClose }) {
         </div>
 
         {tab === 'seeds' && (
-          <div className="flex gap-1.5 px-4 py-2 border-b border-gray-100 overflow-x-auto items-center">
+          <div className="flex gap-1.5 px-4 py-2 border-b border-gray-100 overflow-x-auto items-center sticky top-0 bg-white z-10">
             {[0, 1, 2, 3, 4, 5].map(t => (
               <button key={t} onClick={() => setTierFilter(t)}
                 className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full transition-colors ${tierFilter === t ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
@@ -868,9 +844,25 @@ function FeedbackPanel({ onSubmit, onClose }) {
   )
 }
 
-// ─── Weapons & Armour panel (tasks 6, 7) ─────────────────────────────────────
-function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEquipArmour, onClose }) {
+// ─── Weapons & Armour panel ───────────────────────────────────────────────────
+function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEquipArmour, onBuyAxe, onEquipAxe, onClose }) {
   const [tab, setTab] = useState('weapons')
+  const shopRow = (item, equipped, owned, locked, canAfford, onBuy, onEquip, statLabel) => (
+    <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${equipped?'border-red-300 bg-red-50':locked?'border-gray-100 bg-gray-50':'border-gray-200 bg-white'}`}>
+      <span className="text-3xl">{item.emoji}</span>
+      <div className="flex-1">
+        <div className="font-bold text-gray-800">{item.name}</div>
+        <div className="text-xs text-gray-500">{statLabel}</div>
+        {locked && <div className="text-xs text-orange-500 mt-0.5">Requires {item.killsRequired} kills</div>}
+      </div>
+      <motion.button onClick={() => owned ? onEquip(item) : onBuy(item)}
+        disabled={locked || (!owned && !canAfford)}
+        className={`text-xs font-bold px-3 py-1.5 rounded-xl ${equipped?'bg-red-100 text-red-700':locked?'bg-gray-100 text-gray-400 cursor-not-allowed':owned?'bg-gray-100 text-gray-700 hover:bg-gray-200':canAfford?'bg-white border border-gray-200 shadow hover:shadow-md':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+        whileTap={owned||(!locked&&canAfford)?{scale:0.9}:{}}>
+        {equipped ? 'Equipped' : owned ? 'Equip' : locked ? 'Locked' : `🌸 ${item.cost.toLocaleString()}`}
+      </motion.button>
+    </div>
+  )
   return (
     <motion.div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
@@ -881,7 +873,7 @@ function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEqui
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           <div className="flex items-center gap-2">
             <Sword size={20} className="text-red-500" />
-            <h2 className="text-xl font-extrabold text-gray-800">Weapons & Armour</h2>
+            <h2 className="text-xl font-extrabold text-gray-800">Weapons & Axes</h2>
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-yellow-50 rounded-xl px-3 py-1.5">
@@ -891,58 +883,107 @@ function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEqui
           </div>
         </div>
         <div className="flex border-b border-gray-100">
-          {['weapons','armour'].map(t => (
+          {['weapons','armour','axes'].map(t => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-3 text-sm font-bold capitalize ${tab===t?'text-red-600 border-b-2 border-red-400':'text-gray-400'}`}>
-              {t === 'weapons' ? '⚔️ Weapons' : '🛡️ Armour'}
+              className={`flex-1 py-2.5 text-xs font-bold ${tab===t?'text-red-600 border-b-2 border-red-400':'text-gray-400'}`}>
+              {t === 'weapons' ? '⚔️ Swords' : t === 'armour' ? '🛡️ Armour' : '🪓 Axes'}
             </button>
           ))}
         </div>
         <div className="overflow-y-auto flex-1 p-3 space-y-2">
           {tab === 'weapons' && WEAPONS_SHOP.map(item => {
-            const owned     = !!(profile.ownedWeapons || {})[item.id]
-            const equipped   = profile.equippedWeapon === item.id
-            const canAfford  = profile.petals >= item.cost
-            const killsReq   = item.killsRequired || 0
-            const hasKills   = (profile.zombieKills || 0) >= killsReq
-            const locked     = !owned && !hasKills
-            return (
-              <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${equipped?'border-red-300 bg-red-50':locked?'border-gray-100 bg-gray-50':'border-gray-200 bg-white'}`}>
-                <span className="text-3xl">{item.emoji}</span>
-                <div className="flex-1">
-                  <div className="font-bold text-gray-800">{item.name}</div>
-                  <div className="text-xs text-gray-500">⚔️ +{item.damage} damage</div>
-                  {locked && <div className="text-xs text-orange-500 mt-0.5">Requires {killsReq} kills</div>}
-                </div>
-                <motion.button onClick={() => owned ? onEquipWeapon(item) : onBuyWeapon(item)}
-                  disabled={locked || (!owned && !canAfford)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${equipped?'bg-red-100 text-red-700':locked?'bg-gray-100 text-gray-400 cursor-not-allowed':owned?'bg-gray-100 text-gray-700 hover:bg-gray-200':canAfford?'bg-white border border-gray-200 shadow hover:shadow-md':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                  whileTap={owned||(!locked&&canAfford)?{scale:0.9}:{}}>
-                  {equipped ? 'Equipped' : owned ? 'Equip' : locked ? 'Locked' : `🌸 ${item.cost.toLocaleString()}`}
-                </motion.button>
-              </div>
-            )
+            const owned = !!(profile.ownedWeapons || {})[item.id]
+            const kills = (profile.zombieKills || 0)
+            const locked = !owned && kills < (item.killsRequired || 0)
+            return shopRow(item, profile.equippedWeapon === item.id, owned, locked, profile.petals >= item.cost, onBuyWeapon, onEquipWeapon, `⚔️ +${item.damage} dmg`)
           })}
           {tab === 'armour' && ARMOUR_SHOP.map(item => {
-            const owned     = !!(profile.ownedArmour || {})[item.id]
-            const equipped   = profile.equippedArmour === item.id
-            const canAfford  = profile.petals >= item.cost
-            const killsReq   = item.killsRequired || 0
-            const hasKills   = (profile.zombieKills || 0) >= killsReq
-            const locked     = !owned && !hasKills
+            const owned = !!(profile.ownedArmour || {})[item.id]
+            const locked = !owned && (profile.zombieKills || 0) < (item.killsRequired || 0)
+            return shopRow(item, profile.equippedArmour === item.id, owned, locked, profile.petals >= item.cost, onBuyArmour, onEquipArmour, `🛡️ +${item.defense} def`)
+          })}
+          {tab === 'axes' && AXES_SHOP.map(item => {
+            const owned = !!(profile.ownedAxes || {})[item.id]
+            const locked = !owned && (profile.zombieKills || 0) < (item.killsRequired || 0)
+            return shopRow(item, profile.equippedAxe === item.id, owned, locked, profile.petals >= item.cost, onBuyAxe, onEquipAxe, `🪓 ${item.chopDamage} chop dmg`)
+          })}
+        </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ─── Carpentry panel (house upgrades + sawmill) ───────────────────────────────
+function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onClose }) {
+  const [tab, setTab] = useState('house')
+  const currentLevel = profile.houseLevel || 0
+  const nextUpgrade  = HOUSE_UPGRADES[currentLevel]
+  return (
+    <motion.div className="fixed inset-0 z-40 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <motion.div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm max-h-[90vh] overflow-hidden flex flex-col"
+        initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <h2 className="text-xl font-extrabold text-gray-800">🔨 Carpentry</h2>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1 bg-yellow-50 rounded-xl px-3 py-1.5">
+              <span>🌸</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
+            </div>
+            <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
+          </div>
+        </div>
+        <div className="flex border-b border-gray-100">
+          {['house','sawmill'].map(t => (
+            <button key={t} onClick={() => setTab(t)}
+              className={`flex-1 py-2.5 text-sm font-bold ${tab===t?'text-amber-600 border-b-2 border-amber-400':'text-gray-400'}`}>
+              {t === 'house' ? '🏠 House' : '🪚 Sawmill'}
+            </button>
+          ))}
+        </div>
+        <div className="overflow-y-auto flex-1 p-4 space-y-3">
+          {tab === 'house' && (
+            <>
+              {currentLevel > 0 && HOUSE_UPGRADES.slice(0, currentLevel).map(u => (
+                <div key={u.level} className="flex items-center gap-2 bg-green-50 rounded-xl px-3 py-2">
+                  <span>{u.emoji}</span><span className="text-sm text-green-700 font-semibold">{u.description}</span>
+                </div>
+              ))}
+              {nextUpgrade ? (
+                <div className="border-2 border-amber-200 bg-amber-50 rounded-2xl p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-2xl">{nextUpgrade.emoji}</span>
+                    <span className="font-extrabold text-amber-800">{nextUpgrade.name}</span>
+                  </div>
+                  <p className="text-sm text-amber-700 mb-3">{nextUpgrade.description}</p>
+                  <motion.button onClick={onUpgrade}
+                    disabled={profile.petals < nextUpgrade.cost}
+                    className={`w-full font-bold py-2.5 rounded-xl text-sm ${profile.petals >= nextUpgrade.cost ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                    whileTap={profile.petals >= nextUpgrade.cost ? { scale: 0.97 } : {}}>
+                    Upgrade — 🌸 {nextUpgrade.cost.toLocaleString()}
+                  </motion.button>
+                </div>
+              ) : (
+                <div className="text-center text-green-600 font-bold py-4">✨ Fully upgraded!</div>
+              )}
+            </>
+          )}
+          {tab === 'sawmill' && SAWMILL_UPGRADES.map(item => {
+            const owned = !!(profile.sawmillUpgrades || {})[item.id]
+            const canAfford = profile.petals >= item.cost
             return (
-              <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${equipped?'border-blue-300 bg-blue-50':locked?'border-gray-100 bg-gray-50':'border-gray-200 bg-white'}`}>
+              <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${owned?'border-amber-300 bg-amber-50':'border-gray-200 bg-white'}`}>
                 <span className="text-3xl">{item.emoji}</span>
                 <div className="flex-1">
                   <div className="font-bold text-gray-800">{item.name}</div>
-                  <div className="text-xs text-gray-500">🛡️ +{item.defense} defense</div>
-                  {locked && <div className="text-xs text-orange-500 mt-0.5">Requires {killsReq} kills</div>}
+                  <div className="text-xs text-gray-500">{item.description}</div>
                 </div>
-                <motion.button onClick={() => owned ? onEquipArmour(item) : onBuyArmour(item)}
-                  disabled={locked || (!owned && !canAfford)}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${equipped?'bg-blue-100 text-blue-700':locked?'bg-gray-100 text-gray-400 cursor-not-allowed':owned?'bg-gray-100 text-gray-700 hover:bg-gray-200':canAfford?'bg-white border border-gray-200 shadow hover:shadow-md':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                  whileTap={owned||(!locked&&canAfford)?{scale:0.9}:{}}>
-                  {equipped ? 'Equipped' : owned ? 'Equip' : locked ? 'Locked' : `🌸 ${item.cost.toLocaleString()}`}
+                <motion.button onClick={() => !owned && onBuySawmill(item)}
+                  disabled={owned || !canAfford}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${owned?'bg-amber-100 text-amber-700':canAfford?'bg-white border border-gray-200 shadow':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  whileTap={!owned && canAfford ? { scale: 0.9 } : {}}>
+                  {owned ? 'Built' : `🌸 ${item.cost.toLocaleString()}`}
                 </motion.button>
               </div>
             )
@@ -1203,38 +1244,53 @@ export default function App() {
 
   // ── Login (two-step with password, task 7) ─────────────────────────────────
   const handleLogin = useCallback(async (username, password, isRegister) => {
-    const starter = defaultProfile(username)
-    let loaded    = { ...starter, username }
+    try {
+      const starter = defaultProfile(username)
+      let loaded    = { ...starter, username }
+      let success = false
 
-    if (apiAvailable) {
-      if (isRegister) {
-        const result = await apiRegister(username, password, starter)
-        if (result?.ok && result.profile?.username) {
-          loaded = hydrateProfile(result.profile)
-        } else if (result?.error) {
-          showToast(`❌ ${result.error}`)
-          return
+      if (apiAvailable) {
+        if (isRegister) {
+          const result = await apiRegister(username, password, { ...starter, username })
+          if (result?.ok) {
+            loaded = hydrateProfile({ ...starter, username })
+            success = true
+          } else {
+            showToast(`❌ ${result?.error || 'Registration failed'}`)
+            return
+          }
+        } else {
+          const result = await apiLoginUser(username, password)
+          if (result?.ok && result.profile) {
+            loaded = hydrateProfile({ ...result.profile, username })
+            success = true
+          } else {
+            showToast(`❌ Wrong username or password`)
+            return
+          }
         }
       } else {
-        const result = await apiLoginUser(username, password)
-        if (result?.ok && result.profile) {
-          loaded = hydrateProfile(result.profile)
-        } else if (result?.error) {
-          showToast(`❌ ${result.error}`)
+        // Offline: load localStorage
+        const local = loadLocal()
+        if (local?.username?.toLowerCase() === username.toLowerCase()) {
+          loaded = local
+          success = true
+        } else {
+          showToast(`❌ Wrong username or password`)
           return
         }
       }
-    } else {
-      // Offline: just load localStorage, password not enforced offline
-      const local = loadLocal()
-      if (local?.username?.toLowerCase() === username.toLowerCase()) {
-        loaded = local
-      }
-    }
 
-    setProfile(loaded)
-    setShowLogin(false)
-    showToast(`Welcome${loaded.totalHarvested > 0 ? ' back' : ''}, ${username}! 🌸`)
+      if (success) {
+        loaded.username = username
+        setProfile(loaded)
+        saveLocal(loaded)
+        setShowLogin(false)
+        showToast(`Welcome${loaded.totalHarvested > 0 ? ' back' : ''}, ${username}! 🌸`)
+      }
+    } catch (err) {
+      showToast(`❌ Login error. Please try again.`)
+    }
   }, [showToast])
 
   // ── Logout ─────────────────────────────────────────────────────────────────
@@ -1366,6 +1422,38 @@ export default function App() {
     })
   }, [showToast])
 
+  const handleBuyAxe = useCallback((item) => {
+    setProfile(prev => {
+      if (!prev || prev.petals < item.cost) { showToast('Not enough petals!'); return prev }
+      showToast(`${item.emoji} ${item.name} bought and equipped!`)
+      return { ...prev, petals: prev.petals - item.cost, ownedAxes: { ...prev.ownedAxes, [item.id]: true }, equippedAxe: item.id }
+    })
+  }, [showToast])
+
+  const handleEquipAxe = useCallback((item) => {
+    setProfile(prev => prev ? ({ ...prev, equippedAxe: item.id }) : prev)
+  }, [])
+
+  const handleBuySawmill = useCallback((item) => {
+    setProfile(prev => {
+      if (!prev || prev.petals < item.cost) { showToast('Not enough petals!'); return prev }
+      if ((prev.sawmillUpgrades || {})[item.id]) return prev
+      showToast(`${item.emoji} ${item.name} built!`)
+      return { ...prev, petals: prev.petals - item.cost, sawmillUpgrades: { ...prev.sawmillUpgrades, [item.id]: true } }
+    })
+  }, [showToast])
+
+  const handleTreeChopped = useCallback((baseReward) => {
+    setProfile(prev => {
+      if (!prev) return prev
+      const ownedUpgrades = prev.sawmillUpgrades || {}
+      const mult = SAWMILL_UPGRADES.reduce((m, u) => ownedUpgrades[u.id] ? u.woodMult : m, 1)
+      const reward = Math.floor(baseReward * mult)
+      showToast(`🪵 Tree chopped! +${reward} 🌸`)
+      return { ...prev, petals: prev.petals + reward }
+    })
+  }, [showToast])
+
   const handleFeedbackSubmit = useCallback(async (message) => {
     await apiFeedback(profile?.username, message)
   }, [profile?.username])
@@ -1455,7 +1543,8 @@ export default function App() {
       if (itemId === 'waterer') {
         if (prev.waterers >= 10) return prev
         update.waterers = prev.waterers + 1
-        const chargesGiven = (prev.houseLevel || 0) >= 3 ? 30 : 20
+        const baseCharges  = (prev.houseLevel || 0) >= 3 ? 30 : 20
+        const chargesGiven = baseCharges * (prev.waterers + 1)
         update.autoHarvestCharges = (prev.autoHarvestCharges || 0) + chargesGiven
         showToast(`Auto Waterer activated! 💧 +${chargesGiven} charges`)
       } else if (itemId === 'fertilizer') {
@@ -1547,6 +1636,8 @@ export default function App() {
   const attackDamage    = 1 + (weaponItem?.damage || 0)
   const weaponRange     = weaponItem?.range || 0
   const defense         = profile.equippedArmour ? (ARMOUR_SHOP.find(a => a.id === profile.equippedArmour)?.defense || 0) : 0
+  const axeItem         = profile.equippedAxe ? AXES_SHOP.find(a => a.id === profile.equippedAxe) : null
+  const chopDamage      = axeItem?.chopDamage || 0
 
   return (
     <div className="fixed inset-0 overflow-hidden font-rounded">
@@ -1566,6 +1657,9 @@ export default function App() {
         attackDamage={attackDamage}
         weaponRange={weaponRange}
         equipSource={equipSource}
+        chopDamage={chopDamage}
+        onTreeChopped={handleTreeChopped}
+        treeBaseReward={TREE_BASE_REWARD}
       />
 
       <AnimatePresence>
@@ -1618,12 +1712,14 @@ export default function App() {
           <WeaponsPanel profile={profile}
             onBuyWeapon={handleBuyWeapon} onBuyArmour={handleBuyArmour}
             onEquipWeapon={handleEquipWeapon} onEquipArmour={handleEquipArmour}
+            onBuyAxe={handleBuyAxe} onEquipAxe={handleEquipAxe}
             onClose={() => setCastleShop(null)} />
         )}
       </AnimatePresence>
       <AnimatePresence>
         {castleShop === 'carpentry' && (
-          <HousePanel profile={profile} onUpgrade={handleHouseUpgrade} onClose={() => setCastleShop(null)} />
+          <CarpentryPanel profile={profile} onUpgrade={handleHouseUpgrade}
+            onBuySawmill={handleBuySawmill} onClose={() => setCastleShop(null)} />
         )}
       </AnimatePresence>
       <AnimatePresence>
@@ -1701,72 +1797,6 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto flex-wrap justify-end">
-            {/* Hotbar — weapon/seeds selector */}
-            <div className="flex gap-1 bg-white/80 backdrop-blur border border-gray-200 rounded-2xl p-2 shadow items-center flex-wrap">
-              <motion.button
-                onClick={() => setEquipSource('weapon')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  equipSource === 'weapon'
-                    ? 'bg-red-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-                whileTap={{ scale: 0.9 }}>
-                {profile.equippedWeapon ? (WEAPONS_SHOP.find(w => w.id === profile.equippedWeapon)?.emoji || '⚔️') : '⚔️'}
-              </motion.button>
-              <motion.button
-                onClick={() => setEquipSource('seeds')}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                  equipSource === 'seeds'
-                    ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-                whileTap={{ scale: 0.9 }}>
-                {seedBarPlants.find(p => p.id === selectedSeed)?.emoji || '🌱'}
-              </motion.button>
-
-              {/* Weapon selection (when in weapon mode) */}
-              {equipSource === 'weapon' && (
-                <>
-                  <div className="w-px h-6 bg-gray-300" />
-                  {WEAPONS_SHOP.filter(w => (profile.ownedWeapons || {})[w.id]).map(weapon => (
-                    <motion.button
-                      key={weapon.id}
-                      onClick={() => handleEquipWeapon(weapon)}
-                      className={`px-2 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                        profile.equippedWeapon === weapon.id
-                          ? 'bg-red-500 text-white shadow'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                      whileTap={{ scale: 0.9 }}
-                      title={weapon.name}>
-                      {weapon.emoji}
-                    </motion.button>
-                  ))}
-                </>
-              )}
-
-              {/* Seed selection (when in seeds mode) */}
-              {equipSource === 'seeds' && (
-                <>
-                  <div className="w-px h-6 bg-gray-300" />
-                  {seedBarPlants.map(plant => (
-                    <motion.button
-                      key={plant.id}
-                      onClick={() => setSelectedSeed(plant.id)}
-                      className={`px-2 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                        selectedSeed === plant.id
-                          ? 'bg-green-500 text-white shadow'
-                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                      whileTap={{ scale: 0.9 }}
-                      title={plant.name}>
-                      {plant.emoji}
-                    </motion.button>
-                  ))}
-                </>
-              )}
-            </div>
-
             {/* Day/night indicator */}
             <div className={`flex items-center gap-1.5 backdrop-blur border rounded-2xl px-3 py-2 shadow text-sm font-bold ${dayPhase === 'night' ? 'bg-indigo-900/80 border-indigo-600 text-indigo-100' : 'bg-yellow-50/80 border-yellow-200 text-yellow-700'}`}>
               {dayPhase === 'night' ? '🌙 Night' : '☀️ Day'} {profile.dayCount || 1}
@@ -1832,16 +1862,37 @@ export default function App() {
             ✨ Fertilizer active — next plant grows 2× faster!
           </motion.p>
         )}
-        <div className="bg-white/80 backdrop-blur rounded-2xl p-2.5 shadow flex flex-wrap gap-1.5 items-center">
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-wider px-1">Seed</span>
+        {/* Hotbar: weapon slot + seed slots */}
+        <div className="bg-white/80 backdrop-blur rounded-2xl p-2 shadow flex flex-wrap gap-1.5 items-center">
+          {/* Weapon section */}
+          <span className="text-xs font-bold text-red-400 uppercase tracking-wider px-1">⚔️</span>
+          {WEAPONS_SHOP.filter(w => (profile.ownedWeapons || {})[w.id]).length === 0 ? (
+            <span className="text-xs text-gray-400 px-1 italic">No weapon</span>
+          ) : (
+            WEAPONS_SHOP.filter(w => (profile.ownedWeapons || {})[w.id]).map(weapon => (
+              <motion.button key={weapon.id}
+                onClick={() => handleEquipWeapon(weapon)}
+                className={`px-2.5 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${
+                  profile.equippedWeapon === weapon.id
+                    ? 'border-red-400 bg-red-50 text-red-700'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-red-200'
+                }`}
+                whileTap={{ scale: 0.92 }} title={weapon.name}>
+                {weapon.emoji}
+              </motion.button>
+            ))
+          )}
+          <div className="w-px h-6 bg-gray-200 mx-0.5" />
+          {/* Seed section */}
+          <span className="text-xs font-bold text-green-500 uppercase tracking-wider px-1">🌱</span>
           {seedBarPlants.map(plant => {
             const owned     = profile.ownedSeeds[plant.id] || 0
             const available = plant.seedCost === 0 || owned > 0
             return (
               <motion.button key={plant.id}
-                onClick={() => available && setSelectedSeed(plant.id)}
+                onClick={() => { available && setSelectedSeed(plant.id); setEquipSource('seeds') }}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${
-                  selectedSeed === plant.id ? 'border-green-400 bg-green-50 text-green-700'
+                  selectedSeed === plant.id && equipSource === 'seeds' ? 'border-green-400 bg-green-50 text-green-700'
                   : available ? 'border-gray-200 bg-white text-gray-600 hover:border-green-200'
                   : 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'}`}
                 whileTap={available ? { scale: 0.92 } : {}}>
@@ -1854,7 +1905,6 @@ export default function App() {
             )
           })}
         </div>
-        <div className="flex gap-2"></div>
         {(profile.dayCount || 1) <= 1 && (
           <p className="text-center text-xs text-white/70 font-semibold drop-shadow">
             WASD/arrows to move · Space to jump · E: interact/attack/sleep · Click plot to plant

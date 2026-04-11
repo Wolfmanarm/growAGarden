@@ -16,15 +16,11 @@ const CASTLE_NPCS = [
   { id: 'general',   x:  5, z: 23, color: '#15803d', sign: '🛒 General',   name: 'Maggie' },
 ]
 
-const INIT_ZOMBIES = [
-  { id:0, x:-4, z:-20 }, { id:1, x:4,  z:-22 }, { id:2, x:-6, z:-25 },
-  { id:3, x:2,  z:-18 }, { id:4, x:-2, z:-28 }, { id:5, x:6,  z:-23 },
-]
-
-// Spawn positions for additional zombies (during progressive nights)
-const EXTRA_SPAWN_POS = [
-  [-8, -16], [8, -19], [-10, -24], [10, -26], [-3, -32], [5, -30],
-  [-7, -21], [3, -25], [-12, -18], [12, -22], [-5, -35], [7, -17],
+// All possible wilderness spawn positions (daytime + night extras)
+const ALL_SPAWN_POS = [
+  [-4,-20], [4,-22], [-6,-25], [2,-18], [-2,-28], [6,-23],
+  [-8,-16], [8,-19], [-10,-24], [10,-26], [-3,-32], [5,-30],
+  [-7,-21], [3,-25], [-12,-18], [12,-22], [-5,-35], [7,-17],
 ]
 
 // ─── Ground ───────────────────────────────────────────────────────────────────
@@ -1078,7 +1074,14 @@ function PlayerCharacter({ playerRef, outfit, swingRef }) {
 }
 
 // ─── Wilderness (north, z < WILD_BOUNDARY) ───────────────────────────────────
-function PineTree({ x, z }) {
+const TREE_POSITIONS = [
+  [-8,-18],[-3,-20],[5,-19],[9,-17],[-6,-23],[0,-25],[7,-24],
+  [-9,-27],[3,-28],[-4,-30],[8,-21],[2,-16],[-7,-15],[-1,-22],[6,-26],
+]
+const TREE_MAX_HP = 5   // hits to chop down a tree
+
+function PineTree({ x, z, hp }) {
+  const pct = hp / TREE_MAX_HP
   return (
     <group position={[x, 0, z]}>
       <mesh position={[0, 0.55, 0]} castShadow>
@@ -1087,20 +1090,33 @@ function PineTree({ x, z }) {
       </mesh>
       {[0, 1, 2].map(i => (
         <mesh key={i} position={[0, 1.1 + i * 0.65, 0]} castShadow>
-          <coneGeometry args={[0.85 - i * 0.2, 1.0, 7]}/>
+          <coneGeometry args={[(0.85 - i * 0.2) * pct, 1.0 * pct, 7]}/>
           <meshLambertMaterial color={i % 2 === 0 ? '#14532d' : '#166534'}/>
+        </mesh>
+      ))}
+      {/* HP pip row */}
+      {Array.from({length: TREE_MAX_HP}).map((_, i) => (
+        <mesh key={`hp${i}`} position={[(i - (TREE_MAX_HP-1)/2) * 0.18, 3.0, 0]}>
+          <boxGeometry args={[0.14, 0.1, 0.04]}/>
+          <meshLambertMaterial color={i < hp ? '#22c55e' : '#374151'}/>
         </mesh>
       ))}
     </group>
   )
 }
 
-function Wilderness() {
-  const trees = useMemo(() => [
-    [-8,-18],[-3,-20],[5,-19],[9,-17],[-6,-23],[0,-25],[7,-24],
-    [-9,-27],[3,-28],[-4,-30],[8,-21],[2,-16],[-7,-15],[-1,-22],[6,-26],
-  ].map(([x,z],i) => ({ x, z, id: i })), [])
+function Stump({ x, z }) {
+  return (
+    <group position={[x, 0, z]}>
+      <mesh position={[0, 0.25, 0]} castShadow>
+        <cylinderGeometry args={[0.18, 0.22, 0.5, 6]}/>
+        <meshLambertMaterial color="#78350f"/>
+      </mesh>
+    </group>
+  )
+}
 
+function Wilderness({ treeHps, choppedTrees }) {
   return (
     <group>
       <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, -0.06, -24]} receiveShadow>
@@ -1117,24 +1133,23 @@ function Wilderness() {
         const x = (i - 4.5) * 3
         return (
           <group key={`fence${i}`} position={[x, 0, WILD_BOUNDARY]}>
-            {/* Posts */}
             <mesh position={[0, 0.5, 0]} castShadow>
-              <boxGeometry args={[0.1, 1.0, 0.1]}/>
-              <meshLambertMaterial color="#8b5a3c"/>
+              <boxGeometry args={[0.1, 1.0, 0.1]}/><meshLambertMaterial color="#8b5a3c"/>
             </mesh>
-            {/* Rails */}
             <mesh position={[0, 0.35, 0]} castShadow>
-              <boxGeometry args={[2.8, 0.08, 0.08]}/>
-              <meshLambertMaterial color="#8b5a3c"/>
+              <boxGeometry args={[2.8, 0.08, 0.08]}/><meshLambertMaterial color="#8b5a3c"/>
             </mesh>
             <mesh position={[0, 0.65, 0]} castShadow>
-              <boxGeometry args={[2.8, 0.08, 0.08]}/>
-              <meshLambertMaterial color="#a0724d"/>
+              <boxGeometry args={[2.8, 0.08, 0.08]}/><meshLambertMaterial color="#a0724d"/>
             </mesh>
           </group>
         )
       })}
-      {trees.map(t => <PineTree key={t.id} x={t.x} z={t.z}/>)}
+      {TREE_POSITIONS.map(([x, z], id) =>
+        choppedTrees.has(id)
+          ? <Stump key={id} x={x} z={z} />
+          : <PineTree key={id} x={x} z={z} hp={treeHps[id] ?? TREE_MAX_HP} />
+      )}
     </group>
   )
 }
@@ -1226,10 +1241,14 @@ function ShopBuilding({ x, z, color }) {
   )
 }
 
-function CastleCity() {
+const GATE_MAX_HP = 60
+
+function CastleCity({ gateHp = GATE_MAX_HP }) {
   const wallColor = '#78716c'
   const wallH     = 2.2
   const wallW     = 0.6
+  const gateAlive = gateHp > 0
+  const gatePct   = gateHp / GATE_MAX_HP
 
   return (
     <group>
@@ -1244,9 +1263,12 @@ function CastleCity() {
         <meshLambertMaterial color="#a8a29e"/>
       </mesh>
 
-      {/* Walls */}
-      <mesh position={[0, wallH/2, 13]} castShadow>
-        <boxGeometry args={[24, wallH, wallW]}/><meshLambertMaterial color={wallColor}/>
+      {/* Front wall — two halves flanking the gate gap */}
+      <mesh position={[-7.25, wallH/2, 13]} castShadow>
+        <boxGeometry args={[9.5, wallH, wallW]}/><meshLambertMaterial color={wallColor}/>
+      </mesh>
+      <mesh position={[7.25, wallH/2, 13]} castShadow>
+        <boxGeometry args={[9.5, wallH, wallW]}/><meshLambertMaterial color={wallColor}/>
       </mesh>
       <mesh position={[0, wallH/2, 31.5]} castShadow>
         <boxGeometry args={[24, wallH, wallW]}/><meshLambertMaterial color={wallColor}/>
@@ -1279,10 +1301,36 @@ function CastleCity() {
         </group>
       ))}
 
-      {/* Gate opening */}
-      <mesh position={[0, 0.8, 13]}>
-        <boxGeometry args={[2.2, 1.6, 0.65]}/><meshLambertMaterial color="#292524"/>
+      {/* Gate pillars (always present) */}
+      {[-2.5, 2.5].map((gx, i) => (
+        <mesh key={i} position={[gx, wallH * 0.65, 13]} castShadow>
+          <boxGeometry args={[0.55, wallH * 1.3, wallW * 1.2]}/>
+          <meshLambertMaterial color="#57534e"/>
+        </mesh>
+      ))}
+      {/* Gate arch */}
+      <mesh position={[0, wallH + 0.15, 13]}>
+        <boxGeometry args={[5.6, 0.44, wallW * 1.2]}/><meshLambertMaterial color="#57534e"/>
       </mesh>
+
+      {/* Gate doors (rendered only when gate alive) */}
+      {gateAlive && (
+        <group position={[0, 0, 13]}>
+          {[-1.1, 1.1].map((dx, i) => (
+            <mesh key={i} position={[dx, wallH * 0.5 * gatePct, 0]} castShadow>
+              <boxGeometry args={[2.1, wallH * gatePct, 0.25]}/>
+              <meshLambertMaterial color="#92400e" opacity={0.7 + 0.3 * gatePct} transparent/>
+            </mesh>
+          ))}
+          {/* Gate HP bar */}
+          <group position={[0, wallH + 0.6, 0]}>
+            <mesh><boxGeometry args={[4, 0.18, 0.05]}/><meshLambertMaterial color="#1e293b"/></mesh>
+            <mesh position={[-(1 - gatePct) * 2, 0, 0.04]} scale={[gatePct, 1, 1]}>
+              <boxGeometry args={[4, 0.18, 0.05]}/><meshLambertMaterial color="#ef4444"/>
+            </mesh>
+          </group>
+        </group>
+      )}
 
       {/* 4 shop buildings offset behind their NPC */}
       {CASTLE_NPCS.map(npc => (
@@ -1373,11 +1421,12 @@ function ZombieBody({ zombie, hp, meshMapRef }) {
 }
 
 // ─── Camera + movement ────────────────────────────────────────────────────────
-const _camTarget = new THREE.Vector3()
-const _lookAt    = new THREE.Vector3()
-const MOVE_SPEED = 4.5
-const TURN_SPEED = 2.4
-const REACH      = 2.6   // max distance to interact with a plot (task 1)
+const _camTarget    = new THREE.Vector3()
+const _lookAt       = new THREE.Vector3()
+const MOVE_SPEED    = 4.5
+const TURN_SPEED    = 2.4
+const REACH         = 2.6   // max distance to interact with a plot (task 1)
+const NIGHT_SECONDS = 120    // must match App.jsx
 
 // House AABB in world space (task 6): house at [-11,0,0] rotated 90°
 // Unrotated: 4 wide (x) × 3.4 deep (z) → after 90° rot: 3.4 wide (x) × 4 deep (z)
@@ -1385,7 +1434,8 @@ const HOUSE_AABB = { minX: -12.7, maxX: -9.3, minZ: -2.0, maxZ: 2.0 }
 const PLAYER_R   = 0.4
 
 function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEnter,
-                     dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep, attackDamage, weaponRange, equipSource }) {
+                     dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep,
+                     attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward }) {
   const playerRef    = useRef()
   const playerPos    = useRef(new THREE.Vector3(0, 0, 6))
   const playerRot    = useRef(Math.PI)
@@ -1408,12 +1458,33 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   useEffect(() => { equipSourceRef.current = equipSource }, [equipSource])
 
   // Zombie system — positions live in refs, only HP triggers re-render
-  const zombiesRef    = useRef(INIT_ZOMBIES.map(z => ({ ...z, hp: 10, lastHit: 0, _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0 })))
+  const zombiesRef    = useRef([])
   const zombieMeshMap = useRef(new Map())
-  const [zombieHps, setZombieHps] = useState(() => Object.fromEntries(INIT_ZOMBIES.map(z => [z.id, 10])))
+  const [zombieHps, setZombieHps] = useState({})
   const allZombiesDeadRef = useRef(false)
-  const nextZombieIdRef = useRef(6)
-  const spawnTimerRef = useRef(0)
+  const nextZombieIdRef = useRef(0)
+  const spawnTimerRef   = useRef(0)
+  const daySpawnRef     = useRef(5)   // how many were placed at day-start (updates each day)
+
+  // Gate state (repairs each morning)
+  const [gateHp, setGateHp]     = useState(GATE_MAX_HP)
+  const gateHpRef               = useRef(GATE_MAX_HP)
+  const gateHitRef              = useRef(0)
+  useEffect(() => {
+    if (dayPhase === 'day') {
+      gateHpRef.current = GATE_MAX_HP
+      setGateHp(GATE_MAX_HP)
+    }
+  }, [dayPhase])
+
+  // Tree chopping state
+  const [treeHps, setTreeHps]       = useState(() => Object.fromEntries(TREE_POSITIONS.map((_, i) => [i, TREE_MAX_HP])))
+  const [choppedTrees, setChoppedTrees] = useState(() => new Set())
+  const treeHpsRef    = useRef(Object.fromEntries(TREE_POSITIONS.map((_, i) => [i, TREE_MAX_HP])))
+  const choppedRef    = useRef(new Set())
+  const chopCoolRef   = useRef(0)
+  const chopDmgRef    = useRef(chopDamage || 0)
+  useEffect(() => { chopDmgRef.current = chopDamage || 0 }, [chopDamage])
 
   // NPC proximity tracking
   const nearNpcRef = useRef(null)
@@ -1427,19 +1498,23 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   }, [])
 
   useEffect(() => {
-    if (playerRef.current) playerRef.current._movingRef = movingRef
+    playerRef._movingRef = movingRef
   })
 
   // Initialize and respawn zombies at day start or mount
   useEffect(() => {
     const initZombies = () => {
-      const newZombies = INIT_ZOMBIES.map(z => ({
-        id: z.id, x: z.x, z: z.z,
-        hp: 10, lastHit: 0,
+      const dayCount  = profile?.dayCount || 1
+      const spawnCount = Math.min(3 + dayCount * 2, ALL_SPAWN_POS.length)
+      // Shuffle spawn positions and pick spawnCount of them
+      const shuffled = [...ALL_SPAWN_POS].sort(() => Math.random() - 0.5)
+      const newZombies = shuffled.slice(0, spawnCount).map(([x, z], i) => ({
+        id: i, x, z, hp: 10, lastHit: 0,
         _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0
       }))
       zombiesRef.current = newZombies
-      nextZombieIdRef.current = 6
+      nextZombieIdRef.current = spawnCount
+      daySpawnRef.current = spawnCount
       spawnTimerRef.current = 0
       setZombieHps(Object.fromEntries(newZombies.map(z => [z.id, 10])))
       allZombiesDeadRef.current = false
@@ -1448,17 +1523,20 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     if (dayPhase === 'day') {
       initZombies()
     }
-  }, [dayPhase])
+  }, [dayPhase, profile?.dayCount])
 
   // Ensure zombies initialized on first mount
   useEffect(() => {
     if (zombiesRef.current.length === 0) {
-      const newZombies = INIT_ZOMBIES.map(z => ({
-        id: z.id, x: z.x, z: z.z,
-        hp: 10, lastHit: 0,
+      const dayCount   = profile?.dayCount || 1
+      const spawnCount = Math.min(3 + dayCount * 2, ALL_SPAWN_POS.length)
+      const shuffled   = [...ALL_SPAWN_POS].sort(() => Math.random() - 0.5)
+      const newZombies = shuffled.slice(0, spawnCount).map(([x, z], i) => ({
+        id: i, x, z, hp: 10, lastHit: 0,
         _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0
       }))
       zombiesRef.current = newZombies
+      nextZombieIdRef.current = spawnCount
       setZombieHps(Object.fromEntries(newZombies.map(z => [z.id, 10])))
     }
   }, [])
@@ -1565,14 +1643,15 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     // ── Zombie spawn during night ────────────────────────────────────────────
     if (isNight) {
       spawnTimerRef.current += delta
-      const nightProgress = (spawnTimerRef.current / (NIGHT_SECONDS * 1000)) * 100  // 0-100%
-      const spawnsToMake = Math.floor(nextZombieIdRef.current - 6)
-      const maxSpawns = Math.floor(2 + nightProgress * 0.15)  // Scale from 2 to 3.5 spawns per night
+      const nightProgress = Math.min(spawnTimerRef.current / NIGHT_SECONDS, 1)  // 0-1
+      // Extra zombies spawned at night on top of the day-start count (scale 2→4)
+      const maxNightExtras = Math.floor(2 + nightProgress * 2)
+      const nightExtras    = nextZombieIdRef.current - daySpawnRef.current
+      const totalCap       = ALL_SPAWN_POS.length
 
-      if (nextZombieIdRef.current - 6 < maxSpawns && nextZombieIdRef.current < 18) {
-        // Spawn a new zombie
-        const spawnIdx = Math.floor(Math.random() * EXTRA_SPAWN_POS.length)
-        const [sx, sz] = EXTRA_SPAWN_POS[spawnIdx]
+      if (nightExtras < maxNightExtras && nextZombieIdRef.current < totalCap) {
+        const spawnIdx = Math.floor(Math.random() * ALL_SPAWN_POS.length)
+        const [sx, sz] = ALL_SPAWN_POS[spawnIdx]
         const newZombie = { id: nextZombieIdRef.current, x: sx, z: sz, hp: 10, lastHit: 0, _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0 }
         zombiesRef.current.push(newZombie)
         setZombieHps(prev => ({ ...prev, [newZombie.id]: 10 }))
@@ -1597,8 +1676,19 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       const dist = Math.sqrt(dx * dx + dz * dz)
 
       if (isNight) {
-        // Night: chase player anywhere (no wilderness boundary)
-        if (dist > HIT_DIST) {
+        // If gate is intact, block zombies from entering castle (z > CASTLE_ENTRY_Z) unless gate is broken
+        const gateIntact = gateHpRef.current > 0
+        const approachingGate = z.z > 10 && z.z < 14 && Math.abs(z.x) < 3.5
+        if (gateIntact && approachingGate) {
+          // Attack the gate instead of moving through
+          if (now - gateHitRef.current > 2000) {
+            gateHitRef.current = now
+            const newGateHp = Math.max(0, gateHpRef.current - 1)
+            gateHpRef.current = newGateHp
+            setGateHp(newGateHp)
+          }
+        } else if (dist > HIT_DIST) {
+          // Night: chase player anywhere
           z.x += (dx / dist) * ZOMBIE_SPEED * delta
           z.z += (dz / dist) * ZOMBIE_SPEED * delta
         }
@@ -1715,17 +1805,44 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
           }
         }
         if (!zombieHit) {
-          if (near) {
-            // 4. Enter house (day)
-            onHouseEnter?.()
-          } else {
-            // 5. Interact with front plot
-            const fpx = px + Math.sin(r) * PLOT_SPACING
-            const fpz = pz + Math.cos(r) * PLOT_SPACING
-            const idx = findPlotAtPos(fpx, fpz)
-            if (idx >= 0) {
-              swingRef.current = 1
-              onPlotClick(idx)
+          // Check if near a tree to chop
+          const TREE_REACH = 2.8
+          let treeChopped = false
+          if (chopDmgRef.current > 0 && Date.now() - chopCoolRef.current > 600) {
+            for (let tid = 0; tid < TREE_POSITIONS.length; tid++) {
+              if (choppedRef.current.has(tid)) continue
+              const [tx, tz] = TREE_POSITIONS[tid]
+              const td = Math.sqrt((px - tx) ** 2 + (pz - tz) ** 2)
+              if (td < TREE_REACH) {
+                chopCoolRef.current = Date.now()
+                swingRef.current = 1
+                const prevHp = treeHpsRef.current[tid] ?? TREE_MAX_HP
+                const newHp  = Math.max(0, prevHp - chopDmgRef.current)
+                treeHpsRef.current[tid] = newHp
+                setTreeHps(prev => ({ ...prev, [tid]: newHp }))
+                if (newHp <= 0) {
+                  choppedRef.current = new Set([...choppedRef.current, tid])
+                  setChoppedTrees(new Set(choppedRef.current))
+                  onTreeChopped?.(treeBaseReward)
+                }
+                treeChopped = true
+                break
+              }
+            }
+          }
+          if (!treeChopped) {
+            if (near) {
+              // 4. Enter house (day)
+              onHouseEnter?.()
+            } else {
+              // 5. Interact with front plot
+              const fpx = px + Math.sin(r) * PLOT_SPACING
+              const fpz = pz + Math.cos(r) * PLOT_SPACING
+              const idx = findPlotAtPos(fpx, fpz)
+              if (idx >= 0) {
+                swingRef.current = 1
+                onPlotClick(idx)
+              }
             }
           }
         }
@@ -1762,14 +1879,14 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       <Clouds/>
       <Fence totalRows={totalRows}/>
       <House3D onEnter={onHouseEnter} houseLevel={profile?.houseLevel || 0}/>
-      <Wilderness/>
-      <CastleCity/>
+      <Wilderness treeHps={treeHps} choppedTrees={choppedTrees}/>
+      <CastleCity gateHp={gateHp}/>
 
       {Array.from({length: totalRows * 5}).map((_,i) => (
         <GardenPlot key={i} index={i} plot={plots[i]??null} onPlotClick={handlePlotClick} totalRows={totalRows}/>
       ))}
 
-      {isNight && zombiesRef.current.map(z => (
+      {zombiesRef.current.map(z => (
         <ZombieBody key={z.id} zombie={z} hp={zombieHps[z.id] ?? 10} meshMapRef={zombieMeshMap}/>
       ))}
 
@@ -1780,13 +1897,15 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 
 // ─── Export ───────────────────────────────────────────────────────────────────
 export default function Garden3D({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEnter,
-                                   dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep, attackDamage, weaponRange, equipSource }) {
+                                   dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep,
+                                   attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward }) {
   return (
     <Canvas shadows camera={{position:[0,8,13],fov:55}} style={{width:'100%',height:'100%',display:'block'}}>
       <GameScene plots={plots} onPlotClick={onPlotClick} profile={profile}
         outfit={outfit} onNearHouse={onNearHouse} onHouseEnter={onHouseEnter}
         dayPhase={dayPhase} onPlayerDamaged={onPlayerDamaged} onTalkToNpc={onTalkToNpc}
-        onNearNpc={onNearNpc} onSleep={onSleep} attackDamage={attackDamage} weaponRange={weaponRange} equipSource={equipSource}/>
+        onNearNpc={onNearNpc} onSleep={onSleep} attackDamage={attackDamage} weaponRange={weaponRange}
+        equipSource={equipSource} chopDamage={chopDamage} onTreeChopped={onTreeChopped} treeBaseReward={treeBaseReward}/>
     </Canvas>
   )
 }
