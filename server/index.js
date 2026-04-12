@@ -6,6 +6,7 @@ import pg from 'pg'
 import bcrypt from 'bcryptjs'
 import { fileURLToPath } from 'url'
 import { dirname, join } from 'path'
+import { existsSync } from 'fs'
 
 const { Pool } = pg
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -157,6 +158,7 @@ const insertFeedback = async (username, message) => {
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
+const DIST = join(__dirname, '../dist')
 const app = express()
 app.use(cors({ origin: '*' }))
 app.use(express.json({ limit: '2mb' }))
@@ -272,6 +274,12 @@ app.post('/api/feedback', async (req, res) => {
     res.status(500).json({ error: 'Feedback submission failed' })
   }
 })
+
+// ─── Static frontend (production) ────────────────────────────────────────────
+if (existsSync(DIST)) {
+  app.use(express.static(DIST))
+  app.get('*', (_req, res) => res.sendFile(join(DIST, 'index.html')))
+}
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001

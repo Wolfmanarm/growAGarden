@@ -1,5 +1,1 @@
-1: fix error recieved from deploying on railway: npm warn config production Use `--omit=dev` instead.
-> grow-a-garden@0.0.0 build
-> vite build
-sh: 1: vite: Permission denied
-ERROR: failed to build: failed to solve: process "npm run build" did not complete successfully: exit code: 127
+1: creating a new account does not work in the production environment. fix this. [DONE]

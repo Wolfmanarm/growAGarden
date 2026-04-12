@@ -173,7 +173,7 @@ function playCrunchSound() {
 }
 
 // ─── API helpers ──────────────────────────────────────────────────────────────
-const API = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+const API = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api' : 'http://localhost:3001/api')
 let apiAvailable = null
 
 async function checkApi() {
