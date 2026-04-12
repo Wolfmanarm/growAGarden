@@ -278,7 +278,7 @@ app.post('/api/feedback', async (req, res) => {
 // ─── Static frontend (production) ────────────────────────────────────────────
 if (existsSync(DIST)) {
   app.use(express.static(DIST))
-  app.get('*', (_req, res) => res.sendFile(join(DIST, 'index.html')))
+  app.get('/{*path}', (_req, res) => res.sendFile(join(DIST, 'index.html')))
 }
 
 // ─── Start ────────────────────────────────────────────────────────────────────
