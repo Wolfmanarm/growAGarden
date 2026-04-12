@@ -1,7 +1,6 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
-import Database from 'better-sqlite3'
 import pg from 'pg'
 import bcrypt from 'bcryptjs'
 import { fileURLToPath } from 'url'
@@ -69,6 +68,7 @@ if (process.env.DATABASE_URL) {
   await initPostgres()
 } else {
   // ─── SQLite (Development) ─────────────────────────────────────────────
+  const { default: Database } = await import('better-sqlite3')
   db = new Database(DB_PATH)
 
   query = async (sql, params) => {
