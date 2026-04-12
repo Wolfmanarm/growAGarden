@@ -82,155 +82,292 @@ function FencePost({x,z}) {
     </group>
   )
 }
-function Fence({totalRows}) {
-  const hw = 5.1
-  const hh = ((totalRows-1)/2)*PLOT_SPACING + 1.1
+function Fence({totalCols = 5}) {
+  // Fixed 5 rows in z; variable cols in x (expanding east)
+  const hh    = 4.9                                        // half-height (z) — fixed
+  const left  = -4.9                                       // left edge — fixed
+  const right = (totalCols - 3) * PLOT_SPACING + 1.1      // right edge grows with cols
+  const cx    = (left + right) / 2                         // center x of fence
+  const hw    = (right - left) / 2                         // half-width
+
   const Rail = ({pos,rot,len}) => (
     <mesh position={pos} rotation={rot} castShadow>
       <boxGeometry args={[len,.07,.07]}/>
       <meshLambertMaterial color="#d97706"/>
     </mesh>
   )
+
+  // Posts along north/south edges
+  const colPosts = Array.from({length: totalCols}, (_, c) => (c - 2) * PLOT_SPACING)
+
   return (
     <group>
-      {[-2,-1,0,1,2].map(i=><FencePost key={`f${i}`} x={i*PLOT_SPACING} z={hh}/>)}
-      <Rail pos={[0,.4,hh]}  rot={[0,0,0]}        len={hw*2}/>
-      <Rail pos={[0,.7,hh]}  rot={[0,0,0]}        len={hw*2}/>
-      {[-2,-1,0,1,2].map(i=><FencePost key={`b${i}`} x={i*PLOT_SPACING} z={-hh}/>)}
-      <Rail pos={[0,.4,-hh]} rot={[0,0,0]}        len={hw*2}/>
-      <Rail pos={[0,.7,-hh]} rot={[0,0,0]}        len={hw*2}/>
-      {Array.from({length:totalRows}).map((_,r)=>{
-        const z=(r-(totalRows-1)/2)*PLOT_SPACING
-        return <FencePost key={`l${r}`} x={-hw} z={z}/>
+      {/* North fence */}
+      {colPosts.map((xp, i) => <FencePost key={`f${i}`} x={xp} z={hh}/>)}
+      <Rail pos={[cx, .4, hh]}  rot={[0,0,0]}        len={hw*2}/>
+      <Rail pos={[cx, .7, hh]}  rot={[0,0,0]}        len={hw*2}/>
+      {/* South fence */}
+      {colPosts.map((xp, i) => <FencePost key={`b${i}`} x={xp} z={-hh}/>)}
+      <Rail pos={[cx, .4,-hh]}  rot={[0,0,0]}        len={hw*2}/>
+      <Rail pos={[cx, .7,-hh]}  rot={[0,0,0]}        len={hw*2}/>
+      {/* West fence (fixed) */}
+      {[-2,-1,0,1,2].map((_,r) => {
+        const zp = (r - 2) * PLOT_SPACING
+        return <FencePost key={`l${r}`} x={left} z={zp}/>
       })}
-      <Rail pos={[-hw,.4,0]} rot={[0,Math.PI/2,0]} len={hh*2}/>
-      <Rail pos={[-hw,.7,0]} rot={[0,Math.PI/2,0]} len={hh*2}/>
-      {Array.from({length:totalRows}).map((_,r)=>{
-        const z=(r-(totalRows-1)/2)*PLOT_SPACING
-        return <FencePost key={`r${r}`} x={hw} z={z}/>
+      <Rail pos={[left,.4,0]}   rot={[0,Math.PI/2,0]} len={hh*2}/>
+      <Rail pos={[left,.7,0]}   rot={[0,Math.PI/2,0]} len={hh*2}/>
+      {/* East fence (grows with cols) */}
+      {[-2,-1,0,1,2].map((_,r) => {
+        const zp = (r - 2) * PLOT_SPACING
+        return <FencePost key={`r${r}`} x={right} z={zp}/>
       })}
-      <Rail pos={[hw,.4,0]}  rot={[0,Math.PI/2,0]} len={hh*2}/>
-      <Rail pos={[hw,.7,0]}  rot={[0,Math.PI/2,0]} len={hh*2}/>
+      <Rail pos={[right,.4,0]}  rot={[0,Math.PI/2,0]} len={hh*2}/>
+      <Rail pos={[right,.7,0]}  rot={[0,Math.PI/2,0]} len={hh*2}/>
     </group>
   )
 }
 
-// ─── Cabin House (task 9) ─────────────────────────────────────────────────────
+// ─── Cabin House ──────────────────────────────────────────────────────────────
 function House3D({ onEnter, houseLevel = 0 }) {
-  const logColor  = houseLevel >= 3 ? '#6B3A2A' : '#5C2E1A'
-  const roofColor = houseLevel >= 4 ? '#1e1b4b' : houseLevel >= 2 ? '#1c1917' : '#292524'
-  const chinkColor = '#d6b896'  // mortar between logs
+  const logA   = houseLevel >= 3 ? '#7c3a20' : '#6B3012'
+  const logB   = houseLevel >= 3 ? '#8B4220' : '#7c3a20'
+  const chink  = '#c4956a'
+  const roof   = houseLevel >= 4 ? '#312e81' : houseLevel >= 2 ? '#1c1917' : '#3b1a0a'
+  const roofTrim = houseLevel >= 4 ? '#4338ca' : '#57534e'
 
   return (
     <group position={HOUSE_POS} rotation={[0, Math.PI / 2, 0]}>
-      {/* Stone foundation */}
-      <mesh position={[0, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[4.6, 0.18, 4.0]} />
+      {/* Stone foundation with border */}
+      <mesh position={[0, 0.07, 0]} receiveShadow>
+        <boxGeometry args={[5.0, 0.16, 4.4]} />
+        <meshLambertMaterial color="#6b6560" />
+      </mesh>
+      <mesh position={[0, 0.14, 0]} receiveShadow>
+        <boxGeometry args={[4.7, 0.08, 4.1]} />
         <meshLambertMaterial color="#78716c" />
       </mesh>
 
-      {/* Log walls — stacked horizontal log layers */}
-      {[0,1,2,3,4,5].map(i => (
-        <mesh key={i} position={[0, 0.22 + i*0.36, 0]} castShadow receiveShadow>
-          <boxGeometry args={[4.2, 0.32, 3.6]} />
-          <meshLambertMaterial color={i%2===0 ? logColor : '#7c4a30'} />
+      {/* Log walls — 7 stacked layers */}
+      {[0,1,2,3,4,5,6].map(i => (
+        <mesh key={i} position={[0, 0.22 + i * 0.34, 0]} castShadow receiveShadow>
+          <boxGeometry args={[4.4, 0.30, 3.8]} />
+          <meshLambertMaterial color={i % 2 === 0 ? logA : logB} />
         </mesh>
       ))}
-      {/* Chinking lines between logs */}
-      {[1,2,3,4,5].map(i => (
-        <mesh key={i} position={[0, 0.38 + (i-1)*0.36, 0]}>
-          <boxGeometry args={[4.22, 0.06, 3.62]} />
-          <meshLambertMaterial color={chinkColor} />
+      {/* Chinking between logs */}
+      {[1,2,3,4,5,6].map(i => (
+        <mesh key={i} position={[0, 0.37 + (i-1) * 0.34, 0]}>
+          <boxGeometry args={[4.42, 0.055, 3.82]} />
+          <meshLambertMaterial color={chink} />
         </mesh>
       ))}
 
-      {/* Steep A-frame log roof */}
-      <mesh position={[0, 2.45, 0]} rotation={[0, 0, 0]} castShadow>
-        <boxGeometry args={[4.4, 0.1, 3.8]} />
-        <meshLambertMaterial color={roofColor} />
-      </mesh>
+      {/* Gable ends (triangular log fill) */}
+      {[-2.18, 2.18].map((zp, i) => (
+        <group key={i}>
+          {[0,1,2].map(j => (
+            <mesh key={j} position={[0, 2.6 + j * 0.34, zp]} castShadow>
+              <boxGeometry args={[4.4 - j * 0.9, 0.30, 0.18]} />
+              <meshLambertMaterial color={j % 2 === 0 ? logA : logB} />
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* A-frame roof — left & right panels */}
       {[-1, 1].map((s, i) => (
-        <mesh key={i} position={[0, 3.1, s * 1.4]} rotation={[s * 0.65, 0, 0]} castShadow>
-          <boxGeometry args={[4.5, 0.12, 2.0]} />
-          <meshLambertMaterial color={roofColor} />
+        <mesh key={i} position={[0, 3.05, s * 1.55]} rotation={[s * 0.72, 0, 0]} castShadow>
+          <boxGeometry args={[4.7, 0.14, 2.3]} />
+          <meshLambertMaterial color={roof} />
         </mesh>
       ))}
-      {/* Roof ridge beam */}
-      <mesh position={[0, 3.72, 0]} castShadow>
-        <boxGeometry args={[4.6, 0.2, 0.22]} />
+      {/* Roof base slab */}
+      <mesh position={[0, 2.42, 0]} castShadow>
+        <boxGeometry args={[4.6, 0.12, 4.0]} />
+        <meshLambertMaterial color={roof} />
+      </mesh>
+      {/* Ridge beam */}
+      <mesh position={[0, 3.84, 0]} castShadow>
+        <boxGeometry args={[4.9, 0.22, 0.26]} />
         <meshLambertMaterial color="#1c1917" />
       </mesh>
-
-      {/* Porch posts */}
-      {[-1.5, 1.5].map((x, i) => (
-        <mesh key={i} position={[x, 0.9, 2.2]} castShadow>
-          <cylinderGeometry args={[0.1, 0.12, 1.8, 8]} />
-          <meshLambertMaterial color={logColor} />
+      {/* Roof trim strips */}
+      {[[-2.22, 0], [2.22, 0]].map(([zp], i) => (
+        <mesh key={i} position={[0, 2.44, zp]} castShadow>
+          <boxGeometry args={[4.7, 0.12, 0.18]} />
+          <meshLambertMaterial color={roofTrim} />
         </mesh>
       ))}
-      {/* Porch beam */}
-      <mesh position={[0, 1.82, 2.2]} castShadow>
-        <boxGeometry args={[3.4, 0.16, 0.16]} />
-        <meshLambertMaterial color={logColor} />
-      </mesh>
+
       {/* Porch floor */}
-      <mesh position={[0, 0.19, 2.35]} receiveShadow>
-        <boxGeometry args={[3.6, 0.1, 0.85]} />
-        <meshLambertMaterial color="#78350f" />
+      <mesh position={[0, 0.19, 2.5]} receiveShadow>
+        <boxGeometry args={[3.8, 0.1, 1.1]} />
+        <meshLambertMaterial color="#92400e" />
       </mesh>
+      {/* Porch planks grain */}
+      {[-1.2, -0.4, 0.4, 1.2].map((xp, i) => (
+        <mesh key={i} position={[xp, 0.245, 2.5]}>
+          <boxGeometry args={[0.72, 0.01, 1.0]} />
+          <meshLambertMaterial color="#78350f" />
+        </mesh>
+      ))}
+      {/* Porch posts */}
+      {[-1.5, 1.5].map((xp, i) => (
+        <mesh key={i} position={[xp, 1.05, 2.42]} castShadow>
+          <cylinderGeometry args={[0.11, 0.13, 2.1, 8]} />
+          <meshLambertMaterial color={logA} />
+        </mesh>
+      ))}
+      {/* Porch cross-beam */}
+      <mesh position={[0, 2.11, 2.42]} castShadow>
+        <boxGeometry args={[3.5, 0.18, 0.18]} />
+        <meshLambertMaterial color={logA} />
+      </mesh>
+      {/* Porch railing */}
+      <mesh position={[0, 0.72, 2.98]} castShadow>
+        <boxGeometry args={[3.0, 0.08, 0.06]} />
+        <meshLambertMaterial color={logB} />
+      </mesh>
+      {[-1.1, -0.55, 0, 0.55, 1.1].map((xp, i) => (
+        <mesh key={i} position={[xp, 0.48, 2.98]} castShadow>
+          <boxGeometry args={[0.06, 0.44, 0.06]} />
+          <meshLambertMaterial color={logB} />
+        </mesh>
+      ))}
 
       {/* Door (clickable) */}
-      <mesh position={[0, 0.9, 1.82]} onClick={onEnter} castShadow>
-        <boxGeometry args={[0.9, 1.6, 0.1]} />
-        <meshLambertMaterial color="#78350f" />
+      <mesh position={[0, 0.95, 1.92]} onClick={onEnter} castShadow>
+        <boxGeometry args={[0.92, 1.7, 0.1]} />
+        <meshLambertMaterial color="#7c2d12" />
       </mesh>
-      {/* Door planks detail */}
-      {[-0.2, 0.2].map((x, i) => (
-        <mesh key={i} position={[x, 0.9, 1.88]}>
-          <boxGeometry args={[0.35, 1.5, 0.04]} />
+      {[-0.21, 0.21].map((xp, i) => (
+        <mesh key={i} position={[xp, 0.95, 1.98]}>
+          <boxGeometry args={[0.36, 1.56, 0.04]} />
           <meshLambertMaterial color="#92400e" />
         </mesh>
       ))}
+      {/* Door crossbar */}
+      <mesh position={[0, 1.15, 1.99]}>
+        <boxGeometry args={[0.88, 0.05, 0.03]} />
+        <meshLambertMaterial color="#92400e" />
+      </mesh>
       {/* Door knob */}
-      <mesh position={[0.32, 0.8, 1.94]}>
-        <sphereGeometry args={[0.06, 8, 8]} /><meshLambertMaterial color="#fbbf24" />
+      <mesh position={[0.3, 0.82, 2.0]}>
+        <sphereGeometry args={[0.065, 8, 8]} /><meshLambertMaterial color="#fbbf24" />
       </mesh>
 
-      {/* Small cabin windows */}
-      {[-1.3, 1.3].map((x, i) => (
-        <group key={i} position={[x, 1.3, 1.85]}>
-          <mesh><boxGeometry args={[0.55, 0.5, 0.06]} /><meshLambertMaterial color="#bae6fd" /></mesh>
-          <mesh position={[0, 0, 0.04]}><boxGeometry args={[0.05, 0.5, 0.02]} /><meshLambertMaterial color="#fff" /></mesh>
-          <mesh position={[0, 0, 0.04]}><boxGeometry args={[0.55, 0.05, 0.02]} /><meshLambertMaterial color="#fff" /></mesh>
+      {/* Front windows */}
+      {[-1.35, 1.35].map((xp, i) => (
+        <group key={i} position={[xp, 1.35, 1.92]}>
+          {/* Frame */}
+          <mesh castShadow>
+            <boxGeometry args={[0.66, 0.58, 0.1]} />
+            <meshLambertMaterial color={logA} />
+          </mesh>
+          {/* Glass */}
+          <mesh position={[0, 0, 0.05]}>
+            <boxGeometry args={[0.52, 0.44, 0.04]} />
+            <meshLambertMaterial color="#bae6fd" transparent opacity={0.75}/>
+          </mesh>
+          {/* Cross divider */}
+          <mesh position={[0, 0, 0.08]}>
+            <boxGeometry args={[0.06, 0.44, 0.02]} /><meshLambertMaterial color="#fff"/>
+          </mesh>
+          <mesh position={[0, 0, 0.08]}>
+            <boxGeometry args={[0.52, 0.06, 0.02]} /><meshLambertMaterial color="#fff"/>
+          </mesh>
+        </group>
+      ))}
+
+      {/* Side windows */}
+      {[-0.8, 0.8].map((zp, i) => (
+        <group key={i} position={[2.21, 1.3, zp]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.1, 0.5, 0.55]} />
+            <meshLambertMaterial color={logA} />
+          </mesh>
+          <mesh position={[0.05, 0, 0]}>
+            <boxGeometry args={[0.04, 0.38, 0.42]} />
+            <meshLambertMaterial color="#bae6fd" transparent opacity={0.7}/>
+          </mesh>
         </group>
       ))}
 
       {/* Stone chimney */}
-      <mesh position={[1.3, 2.8, -0.6]} castShadow>
-        <boxGeometry args={[0.6, 1.1, 0.6]} /><meshLambertMaterial color="#57534e" />
+      <mesh position={[1.4, 2.9, -0.8]} castShadow>
+        <boxGeometry args={[0.65, 1.4, 0.65]} /><meshLambertMaterial color="#57534e" />
       </mesh>
-      <mesh position={[1.3, 3.4, -0.6]}>
-        <boxGeometry args={[0.72, 0.12, 0.72]} /><meshLambertMaterial color="#44403c" />
+      {/* Chimney cap */}
+      <mesh position={[1.4, 3.64, -0.8]} castShadow>
+        <boxGeometry args={[0.82, 0.12, 0.82]} /><meshLambertMaterial color="#44403c" />
       </mesh>
-
-      {/* Stone path */}
-      {[-0.4, 0, 0.4].map((x, i) => (
-        <mesh key={i} position={[x, 0.18, 2.9 + i * 0.5]} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
-          <circleGeometry args={[0.28, 8]} /><meshLambertMaterial color="#a8a29e" />
+      {/* Smoke (decorative) */}
+      {[0, 1, 2].map(i => (
+        <mesh key={i} position={[1.4, 3.82 + i * 0.28, -0.8 + i * 0.05]}>
+          <sphereGeometry args={[0.14 + i * 0.06, 5, 5]}/>
+          <meshLambertMaterial color="#9ca3af" transparent opacity={0.3 - i * 0.08}/>
         </mesh>
       ))}
 
-      {/* Mailbox */}
-      <group position={[1.7, 0, 2.8]}>
-        <mesh position={[0, 0.5, 0]} castShadow><boxGeometry args={[0.12, 0.7, 0.12]} /><meshLambertMaterial color={logColor} /></mesh>
-        <mesh position={[0, 0.96, 0]} castShadow><boxGeometry args={[0.3, 0.2, 0.2]} /><meshLambertMaterial color="#2563eb" /></mesh>
+      {/* Stone path leading away */}
+      {[0, 1, 2, 3].map(i => (
+        <mesh key={i} position={[0, 0.17, 3.1 + i * 0.56]} rotation={[-Math.PI/2, 0, 0]} receiveShadow>
+          <boxGeometry args={[0.6, 0.4, 0.04]} />
+          <meshLambertMaterial color="#a8a29e" />
+        </mesh>
+      ))}
+
+      {/* Flower boxes on porch */}
+      {[-1.2, 0, 1.2].map((xp, i) => (
+        <group key={i} position={[xp, 0.28, 2.98]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.5, 0.2, 0.22]} />
+            <meshLambertMaterial color="#92400e" />
+          </mesh>
+          <mesh position={[0, 0.18, 0]}>
+            <boxGeometry args={[0.44, 0.14, 0.16]} />
+            <meshLambertMaterial color="#4a7c42" />
+          </mesh>
+          {/* Small flowers */}
+          {[-0.12, 0.12].map((fx, j) => (
+            <mesh key={j} position={[fx, 0.3, 0]}>
+              <sphereGeometry args={[0.06, 5, 5]}/>
+              <meshLambertMaterial color={['#f87171','#fbbf24','#a78bfa'][i]}/>
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* Mailbox post */}
+      <group position={[1.9, 0, 3.1]}>
+        <mesh position={[0, 0.52, 0]} castShadow>
+          <boxGeometry args={[0.1, 0.72, 0.1]} /><meshLambertMaterial color={logA} />
+        </mesh>
+        {/* Box body */}
+        <mesh position={[0, 1.0, 0]} castShadow>
+          <boxGeometry args={[0.38, 0.22, 0.24]} /><meshLambertMaterial color="#1d4ed8" />
+        </mesh>
+        {/* Box lid */}
+        <mesh position={[0, 1.12, -0.08]} rotation={[0.3, 0, 0]}>
+          <boxGeometry args={[0.38, 0.04, 0.16]} /><meshLambertMaterial color="#1e40af" />
+        </mesh>
+        {/* Flag */}
+        <mesh position={[0.2, 1.06, 0.06]}>
+          <boxGeometry args={[0.03, 0.22, 0.02]} /><meshLambertMaterial color="#6b7280" />
+        </mesh>
+        <mesh position={[0.29, 1.18, 0.06]}>
+          <boxGeometry args={[0.16, 0.1, 0.02]} /><meshLambertMaterial color="#ef4444" />
+        </mesh>
       </group>
 
-      {/* Level star signs */}
+      {/* House level badge */}
       {houseLevel > 0 && (
-        <mesh position={[-1.6, 1.0, 1.9]}>
-          <boxGeometry args={[0.55, 0.25, 0.05]} /><meshLambertMaterial color="#fef9c3" />
-        </mesh>
+        <group position={[-1.65, 1.05, 1.96]}>
+          <mesh>
+            <boxGeometry args={[0.6, 0.28, 0.05]} /><meshLambertMaterial color="#fef9c3" />
+          </mesh>
+        </group>
       )}
     </group>
   )
@@ -800,11 +937,11 @@ function ProgressBar3D({ progress }) {
   )
 }
 
-function GardenPlot({ index, plot, onPlotClick, totalRows }) {
-  const col = index % 5
-  const row = Math.floor(index / 5)
-  const x   = (col-2)*PLOT_SPACING
-  const z   = (row-(totalRows-1)/2)*PLOT_SPACING
+function GardenPlot({ index, plot, onPlotClick, totalCols }) {
+  const col = index % totalCols
+  const row = Math.floor(index / totalCols)
+  const x   = (col - 2) * PLOT_SPACING
+  const z   = (row - 2) * PLOT_SPACING   // fixed 5 rows centred around row=2
 
   const [progress, setProgress] = useState(()=>{
     if(!plot) return 0
@@ -1199,43 +1336,178 @@ function NpcCharacter({ npc }) {
 }
 
 function ShopBuilding({ x, z, color }) {
+  // Derive a slightly darker shade for trim/accents
+  const trimColor = '#c0bdb9'
+  const wallColor = '#f5f0eb'
+  const stoneColor = '#a8a29e'
   return (
     <group position={[x, 0, z]}>
-      <mesh position={[0, 0.08, 0]} receiveShadow>
-        <boxGeometry args={[3.8, 0.16, 3.4]}/>
-        <meshLambertMaterial color="#a8a29e"/>
+      {/* Stone foundation */}
+      <mesh position={[0, 0.14, 0]} receiveShadow castShadow>
+        <boxGeometry args={[4.0, 0.28, 3.6]}/>
+        <meshLambertMaterial color={stoneColor}/>
       </mesh>
-      <mesh position={[0, 1.1, 0]} castShadow receiveShadow>
-        <boxGeometry args={[3.4, 2.0, 3.0]}/>
-        <meshLambertMaterial color="#e7e5e4"/>
+      {/* Main walls */}
+      <mesh position={[0, 1.28, 0]} castShadow receiveShadow>
+        <boxGeometry args={[3.6, 2.0, 3.2]}/>
+        <meshLambertMaterial color={wallColor}/>
       </mesh>
-      {/* Roof slabs */}
-      <mesh position={[0, 2.25, 0]} castShadow>
-        <boxGeometry args={[3.8, 0.14, 3.4]}/>
-        <meshLambertMaterial color={color}/>
-      </mesh>
-      {[-1, 1].map((s, i) => (
-        <mesh key={i} position={[0, 2.75, s * 1.3]} rotation={[s * 0.5, 0, 0]} castShadow>
-          <boxGeometry args={[3.9, 0.12, 1.7]}/>
-          <meshLambertMaterial color={color}/>
+      {/* Corner pilasters — left & right */}
+      {[-1.82, 1.82].map((px, i) => (
+        <mesh key={i} position={[px, 1.28, 0]} castShadow>
+          <boxGeometry args={[0.22, 2.08, 3.28]}/>
+          <meshLambertMaterial color={trimColor}/>
         </mesh>
       ))}
-      {/* Door */}
-      <mesh position={[0, 0.88, 1.52]} castShadow>
-        <boxGeometry args={[0.72, 1.56, 0.08]}/>
+      {/* Horizontal belt course above door */}
+      <mesh position={[0, 2.34, 1.62]} castShadow>
+        <boxGeometry args={[3.64, 0.14, 0.1]}/>
+        <meshLambertMaterial color={trimColor}/>
+      </mesh>
+
+      {/* === GABLED ROOF === */}
+      {/* Flat eave overhang */}
+      <mesh position={[0, 2.30, 0]} castShadow>
+        <boxGeometry args={[4.1, 0.12, 3.7]}/>
+        <meshLambertMaterial color={color}/>
+      </mesh>
+      {/* Two sloping roof panels */}
+      <mesh position={[0, 2.80, -0.88]} rotation={[-0.52, 0, 0]} castShadow>
+        <boxGeometry args={[4.0, 0.12, 1.9]}/>
+        <meshLambertMaterial color={color}/>
+      </mesh>
+      <mesh position={[0, 2.80, 0.88]} rotation={[0.52, 0, 0]} castShadow>
+        <boxGeometry args={[4.0, 0.12, 1.9]}/>
+        <meshLambertMaterial color={color}/>
+      </mesh>
+      {/* Ridge cap */}
+      <mesh position={[0, 3.22, 0]} castShadow>
+        <boxGeometry args={[4.05, 0.14, 0.22]}/>
+        <meshLambertMaterial color={color}/>
+      </mesh>
+      {/* Gable end triangles */}
+      {[-2.06, 2.06].map((gx, gi) => (
+        <group key={gi} position={[gx, 2.28, 0]}>
+          {[0, 0.22, 0.44, 0.66].map((dy, di) => (
+            <mesh key={di} position={[0, dy + 0.12, 0]} castShadow>
+              <boxGeometry args={[0.12, 0.24, 1.52 - di * 0.38]}/>
+              <meshLambertMaterial color={wallColor}/>
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* === DOOR === */}
+      {/* Door frame */}
+      <mesh position={[0, 1.0, 1.62]} castShadow>
+        <boxGeometry args={[0.96, 1.88, 0.1]}/>
+        <meshLambertMaterial color="#92400e"/>
+      </mesh>
+      {/* Door panel */}
+      <mesh position={[0, 0.96, 1.64]} castShadow>
+        <boxGeometry args={[0.76, 1.72, 0.09]}/>
         <meshLambertMaterial color="#78350f"/>
       </mesh>
-      {/* Windows */}
-      {[-1.1, 1.1].map((wx, i) => (
-        <mesh key={i} position={[wx, 1.2, 1.52]}>
-          <boxGeometry args={[0.5, 0.5, 0.06]}/>
-          <meshLambertMaterial color="#bae6fd"/>
+      {/* Door panel rail (horizontal divider) */}
+      <mesh position={[0, 0.84, 1.65]}>
+        <boxGeometry args={[0.72, 0.06, 0.06]}/>
+        <meshLambertMaterial color="#92400e"/>
+      </mesh>
+      {/* Door knob */}
+      <mesh position={[0.28, 0.96, 1.68]}>
+        <sphereGeometry args={[0.055, 6, 6]}/>
+        <meshLambertMaterial color="#d97706"/>
+      </mesh>
+
+      {/* === WINDOWS (front) === */}
+      {[-1.12, 1.12].map((wx, i) => (
+        <group key={i} position={[wx, 1.28, 1.62]}>
+          {/* Window frame */}
+          <mesh castShadow>
+            <boxGeometry args={[0.72, 0.78, 0.1]}/>
+            <meshLambertMaterial color="#92400e"/>
+          </mesh>
+          {/* Glass pane */}
+          <mesh position={[0, 0, 0.02]}>
+            <boxGeometry args={[0.58, 0.64, 0.06]}/>
+            <meshLambertMaterial color="#bae6fd" transparent opacity={0.75}/>
+          </mesh>
+          {/* Window cross dividers */}
+          <mesh position={[0, 0, 0.06]}>
+            <boxGeometry args={[0.58, 0.04, 0.04]}/>
+            <meshLambertMaterial color="#92400e"/>
+          </mesh>
+          <mesh position={[0, 0, 0.06]}>
+            <boxGeometry args={[0.04, 0.64, 0.04]}/>
+            <meshLambertMaterial color="#92400e"/>
+          </mesh>
+          {/* Flower box below window */}
+          <mesh position={[0, -0.46, 0.06]} castShadow>
+            <boxGeometry args={[0.7, 0.16, 0.22]}/>
+            <meshLambertMaterial color="#92400e"/>
+          </mesh>
+          {/* Flowers in box */}
+          {[-0.18, 0, 0.18].map((fx, fi) => (
+            <mesh key={fi} position={[fx, -0.32, 0.08]}>
+              <sphereGeometry args={[0.08, 5, 5]}/>
+              <meshLambertMaterial color={fi === 1 ? '#fbbf24' : '#f472b6'}/>
+            </mesh>
+          ))}
+        </group>
+      ))}
+
+      {/* === SIDE WINDOWS === */}
+      {[-1, 1].map((side, si) => (
+        <group key={si} position={[side * 1.82, 1.28, 0]}>
+          <mesh castShadow>
+            <boxGeometry args={[0.1, 0.72, 0.68]}/>
+            <meshLambertMaterial color="#92400e"/>
+          </mesh>
+          <mesh position={[side * 0.01, 0, 0]}>
+            <boxGeometry args={[0.06, 0.58, 0.54]}/>
+            <meshLambertMaterial color="#bae6fd" transparent opacity={0.75}/>
+          </mesh>
+        </group>
+      ))}
+
+      {/* === HANGING SIGN === */}
+      {/* Sign bracket arms */}
+      {[-0.44, 0.44].map((bx, bi) => (
+        <mesh key={bi} position={[bx, 2.52, 1.66]}>
+          <boxGeometry args={[0.06, 0.28, 0.06]}/>
+          <meshLambertMaterial color="#92400e"/>
         </mesh>
       ))}
       {/* Sign board */}
-      <mesh position={[0, 2.08, 1.56]} castShadow>
-        <boxGeometry args={[1.5, 0.38, 0.08]}/>
+      <mesh position={[0, 2.36, 1.66]} castShadow>
+        <boxGeometry args={[1.08, 0.34, 0.1]}/>
         <meshLambertMaterial color="#fef3c7"/>
+      </mesh>
+      {/* Sign border */}
+      <mesh position={[0, 2.36, 1.67]}>
+        <boxGeometry args={[1.12, 0.38, 0.07]}/>
+        <meshLambertMaterial color="#92400e"/>
+      </mesh>
+      <mesh position={[0, 2.36, 1.68]}>
+        <boxGeometry args={[1.06, 0.32, 0.08]}/>
+        <meshLambertMaterial color="#fef3c7"/>
+      </mesh>
+
+      {/* === SMALL FRONT STEP === */}
+      <mesh position={[0, 0.08, 1.72]} castShadow>
+        <boxGeometry args={[1.1, 0.16, 0.32]}/>
+        <meshLambertMaterial color={stoneColor}/>
+      </mesh>
+
+      {/* === CHIMNEY === */}
+      <mesh position={[1.1, 3.4, -0.6]} castShadow>
+        <boxGeometry args={[0.36, 1.4, 0.36]}/>
+        <meshLambertMaterial color={stoneColor}/>
+      </mesh>
+      {/* Chimney cap */}
+      <mesh position={[1.1, 4.12, -0.6]} castShadow>
+        <boxGeometry args={[0.48, 0.1, 0.48]}/>
+        <meshLambertMaterial color="#78716c"/>
       </mesh>
     </group>
   )
@@ -1346,43 +1618,48 @@ function CastleCity({ gateHp = GATE_MAX_HP }) {
 }
 
 // ─── Zombie ───────────────────────────────────────────────────────────────────
-function ZombieBody({ zombie, hp, meshMapRef }) {
-  const ref = useRef()
-  const leftLegRef = useRef()
+function ZombieBody({ zombie, hp, meshMapRef, legMapRef, hpBarMapRef }) {
+  const ref         = useRef()
+  const leftLegRef  = useRef()
   const rightLegRef = useRef()
+  const hpFillRef   = useRef()
 
   useEffect(() => {
+    const id = zombie.id
     if (ref.current) {
       ref.current.position.set(zombie.x, 0, zombie.z)
-      meshMapRef.current.set(zombie.id, ref.current)
+      meshMapRef.current.set(id, ref.current)
     }
-    return () => meshMapRef.current.delete(zombie.id)
-  }, [zombie.id, meshMapRef])
+    if (leftLegRef.current && rightLegRef.current)
+      legMapRef.current.set(id, { left: leftLegRef.current, right: rightLegRef.current })
+    if (hpFillRef.current)
+      hpBarMapRef.current.set(id, hpFillRef.current)
+    return () => {
+      meshMapRef.current.delete(id)
+      legMapRef.current.delete(id)
+      hpBarMapRef.current.delete(id)
+    }
+  }, [zombie.id, meshMapRef, legMapRef, hpBarMapRef])
 
-  // Walking animation
-  useFrame(({ clock }) => {
-    if (leftLegRef.current && rightLegRef.current) {
-      const t = clock.elapsedTime + zombie.id  // Stagger by ID
-      const swing = Math.sin(t * 8) * 0.5  // Faster swing for undead gait
-      leftLegRef.current.rotation.x = swing
-      rightLegRef.current.rotation.x = -swing
-    }
-  })
+  // No per-zombie useFrame — leg animation handled centrally in GameScene
 
   if (hp <= 0) return null
-  const hpFrac = hp / 10
 
   return (
-    <group ref={ref}>
+    <group ref={ref} position={[zombie.x, 0, zombie.z]}>
       {/* Legs */}
-      {[-0.12, 0.12].map((lx, i) => (
-        <group key={i} ref={i === 0 ? leftLegRef : rightLegRef} position={[lx, 0.28, 0]}>
-          <mesh castShadow>
-            <boxGeometry args={[0.18, 0.56, 0.18]}/>
-            <meshLambertMaterial color="#166534"/>
-          </mesh>
-        </group>
-      ))}
+      <group ref={leftLegRef} position={[-0.12, 0.28, 0]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.18, 0.56, 0.18]}/>
+          <meshLambertMaterial color="#166534"/>
+        </mesh>
+      </group>
+      <group ref={rightLegRef} position={[0.12, 0.28, 0]}>
+        <mesh castShadow>
+          <boxGeometry args={[0.18, 0.56, 0.18]}/>
+          <meshLambertMaterial color="#166534"/>
+        </mesh>
+      </group>
       {/* Body */}
       <mesh position={[0, 0.82, 0]} castShadow>
         <boxGeometry args={[0.48, 0.52, 0.26]}/>
@@ -1407,18 +1684,114 @@ function ZombieBody({ zombie, hp, meshMapRef }) {
           <meshLambertMaterial color="#ef4444" emissive="#ef4444" emissiveIntensity={0.8}/>
         </mesh>
       ))}
-      {/* HP bar */}
+      {/* HP bar — fill mesh is updated via ref in GameScene's useFrame */}
       <group position={[0, 1.82, 0]}>
         <mesh>
           <boxGeometry args={[0.7, 0.09, 0.04]}/><meshLambertMaterial color="#1e293b"/>
         </mesh>
-        <mesh position={[-(1 - hpFrac) * 0.35, 0, 0.03]} scale={[hpFrac, 1, 1]}>
+        <mesh ref={hpFillRef} position={[0, 0, 0.03]}>
           <boxGeometry args={[0.7, 0.09, 0.04]}/><meshLambertMaterial color="#ef4444"/>
         </mesh>
       </group>
     </group>
   )
 }
+
+// ─── Arrow projectile ────────────────────────────────────────────────────────
+// Position is updated directly via ref each frame — React state only drives add/remove
+function ArrowProjectile({ id, initX, initY, initZ, initDx, initDz, meshMapRef }) {
+  const ref   = useRef()
+  const angle = Math.atan2(initDx, initDz)
+
+  useEffect(() => {
+    if (ref.current) meshMapRef.current.set(id, ref.current)
+    return () => meshMapRef.current.delete(id)
+  }, [id, meshMapRef])
+
+  return (
+    <group ref={ref} position={[initX, initY, initZ]} rotation={[0, angle, 0]}>
+      {/* Shaft */}
+      <mesh rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[0.022, 0.022, 0.55, 4]}/>
+        <meshLambertMaterial color="#92400e"/>
+      </mesh>
+      {/* Head */}
+      <mesh position={[0, 0, 0.3]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.05, 0.14, 4]}/>
+        <meshLambertMaterial color="#94a3b8"/>
+      </mesh>
+      {/* Fletching */}
+      <mesh position={[0, 0, -0.28]} rotation={[Math.PI / 2, 0, 0]}>
+        <coneGeometry args={[0.04, 0.1, 4]}/>
+        <meshLambertMaterial color="#f3f4f6"/>
+      </mesh>
+    </group>
+  )
+}
+
+// ─── Watch Tower (archer upgrade) ────────────────────────────────────────────
+function WatchTower({ x, z }) {
+  return (
+    <group position={[x, 0, z]}>
+      {/* Stone base */}
+      <mesh position={[0, 0.55, 0]} castShadow>
+        <cylinderGeometry args={[1.1, 1.35, 1.1, 8]}/>
+        <meshLambertMaterial color="#57534e"/>
+      </mesh>
+      {/* Tower body */}
+      <mesh position={[0, 2.0, 0]} castShadow>
+        <cylinderGeometry args={[0.88, 1.05, 1.8, 8]}/>
+        <meshLambertMaterial color="#78716c"/>
+      </mesh>
+      {/* Battlements */}
+      {Array.from({length: 8}).map((_, i) => {
+        const a = (i / 8) * Math.PI * 2
+        return (
+          <mesh key={i} position={[Math.sin(a) * 0.82, 3.1, Math.cos(a) * 0.82]} castShadow>
+            <boxGeometry args={[0.3, 0.44, 0.28]}/>
+            <meshLambertMaterial color="#57534e"/>
+          </mesh>
+        )
+      })}
+      {/* Platform floor */}
+      <mesh position={[0, 2.88, 0]}>
+        <cylinderGeometry args={[0.96, 0.96, 0.08, 8]}/>
+        <meshLambertMaterial color="#44403c"/>
+      </mesh>
+      {/* Archer body */}
+      <mesh position={[0, 3.3, 0]} castShadow>
+        <boxGeometry args={[0.38, 0.44, 0.22]}/>
+        <meshLambertMaterial color="#1d4ed8"/>
+      </mesh>
+      {/* Archer head */}
+      <mesh position={[0, 3.64, 0]} castShadow>
+        <boxGeometry args={[0.28, 0.28, 0.26]}/>
+        <meshLambertMaterial color="#fde68a"/>
+      </mesh>
+      {/* Bow */}
+      <mesh position={[0.28, 3.3, 0.1]} rotation={[0.2, 0, 0.3]} castShadow>
+        <torusGeometry args={[0.18, 0.022, 6, 10, Math.PI]}/>
+        <meshLambertMaterial color="#92400e"/>
+      </mesh>
+      {/* Bowstring */}
+      <mesh position={[0.28, 3.28, 0.28]} rotation={[Math.PI / 2, 0, 0.3]}>
+        <cylinderGeometry args={[0.008, 0.008, 0.36, 4]}/>
+        <meshLambertMaterial color="#f9fafb"/>
+      </mesh>
+    </group>
+  )
+}
+
+// Archer stats based on castle upgrades
+function getArcherStats(castleUpgrades) {
+  if (!castleUpgrades?.archers) return null
+  if (castleUpgrades.archers_4) return { damage: 7, cooldown: 2.0 }
+  if (castleUpgrades.archers_3) return { damage: 5, cooldown: 3.0 }
+  if (castleUpgrades.archers_2) return { damage: 3, cooldown: 4.0 }
+  return { damage: 2, cooldown: 5.0 }
+}
+
+const TOWER_POSITIONS = [[-8, 14.5], [8, 14.5]]
 
 // ─── Camera + movement ────────────────────────────────────────────────────────
 const _camTarget    = new THREE.Vector3()
@@ -1445,26 +1818,43 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   const nearRef      = useRef(false)
   const swingRef     = useRef(0)
   const ambientRef   = useRef()
-  const totalRows    = 5 + (profile?.extraRows || 0)
+  const totalCols    = 5 + (profile?.extraRows || 0)
 
   // Keep latest prop values accessible inside useFrame without stale closures
-  const dayPhaseRef     = useRef(dayPhase)
-  const attackDmgRef    = useRef(attackDamage)
-  const weaponRangeRef  = useRef(weaponRange)
-  const equipSourceRef  = useRef(equipSource)
-  useEffect(() => { dayPhaseRef.current = dayPhase },     [dayPhase])
-  useEffect(() => { attackDmgRef.current = attackDamage }, [attackDamage])
-  useEffect(() => { weaponRangeRef.current = weaponRange }, [weaponRange])
-  useEffect(() => { equipSourceRef.current = equipSource }, [equipSource])
+  const dayPhaseRef       = useRef(dayPhase)
+  const attackDmgRef      = useRef(attackDamage)
+  const weaponRangeRef    = useRef(weaponRange)
+  const equipSourceRef    = useRef(equipSource)
+  const castleUpgradesRef = useRef(profile?.castleUpgrades || {})
+  useEffect(() => { dayPhaseRef.current = dayPhase },               [dayPhase])
+  useEffect(() => { attackDmgRef.current = attackDamage },          [attackDamage])
+  useEffect(() => { weaponRangeRef.current = weaponRange },         [weaponRange])
+  useEffect(() => { equipSourceRef.current = equipSource },         [equipSource])
+  useEffect(() => { castleUpgradesRef.current = profile?.castleUpgrades || {} }, [profile?.castleUpgrades])
 
-  // Zombie system — positions live in refs, only HP triggers re-render
-  const zombiesRef    = useRef([])
-  const zombieMeshMap = useRef(new Map())
+  // Arrow projectile system — meshMapRef lets us update positions directly (no per-frame setState)
+  const arrowsRef     = useRef([])
+  const arrowMeshMap  = useRef(new Map())
+  const [arrowRenders, setArrowRenders] = useState([])
+  const nextArrowId   = useRef(0)
+  const archerTimer   = useRef(0)
+
+  // Zombie system — positions live in refs, only HP=0 triggers re-render
+  const zombiesRef     = useRef([])
+  const zombieMeshMap  = useRef(new Map())
+  const zombieLegMap   = useRef(new Map())   // id → {left, right} group refs for leg animation
+  const zombieHpBarMap = useRef(new Map())   // id → hp fill mesh ref
   const [zombieHps, setZombieHps] = useState({})
   const allZombiesDeadRef = useRef(false)
   const nextZombieIdRef = useRef(0)
   const spawnTimerRef   = useRef(0)
-  const daySpawnRef     = useRef(5)   // how many were placed at day-start (updates each day)
+  const daySpawnRef     = useRef(5)
+
+  // Track totalCols and dayCount inside useFrame without stale closure
+  const totalColsRef  = useRef(totalCols)
+  const dayCountRef   = useRef(profile?.dayCount || 1)
+  useEffect(() => { totalColsRef.current = totalCols }, [totalCols])
+  useEffect(() => { dayCountRef.current = profile?.dayCount || 1 }, [profile?.dayCount])
 
   // Gate state (repairs each morning)
   const [gateHp, setGateHp]     = useState(GATE_MAX_HP)
@@ -1474,6 +1864,12 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     if (dayPhase === 'day') {
       gateHpRef.current = GATE_MAX_HP
       setGateHp(GATE_MAX_HP)
+      // Trees re-grow every morning
+      const freshHps = Object.fromEntries(TREE_POSITIONS.map((_, i) => [i, TREE_MAX_HP]))
+      treeHpsRef.current = freshHps
+      setTreeHps(freshHps)
+      choppedRef.current = new Set()
+      setChoppedTrees(new Set())
     }
   }, [dayPhase])
 
@@ -1501,72 +1897,116 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     playerRef._movingRef = movingRef
   })
 
-  // Initialize and respawn zombies at day start or mount
-  useEffect(() => {
-    const initZombies = () => {
-      const dayCount  = profile?.dayCount || 1
-      const spawnCount = Math.min(3 + dayCount * 2, ALL_SPAWN_POS.length)
-      // Shuffle spawn positions and pick spawnCount of them
-      const shuffled = [...ALL_SPAWN_POS].sort(() => Math.random() - 0.5)
-      const newZombies = shuffled.slice(0, spawnCount).map(([x, z], i) => ({
-        id: i, x, z, hp: 10, lastHit: 0,
-        _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0
-      }))
-      zombiesRef.current = newZombies
-      nextZombieIdRef.current = spawnCount
-      daySpawnRef.current = spawnCount
-      spawnTimerRef.current = 0
-      setZombieHps(Object.fromEntries(newZombies.map(z => [z.id, 10])))
-      allZombiesDeadRef.current = false
-    }
+  // Farm bounds — used to exclude zombie spawns from farm area
+  const FARM_MIN_Z = -3.8 - 1.0, FARM_MAX_Z = 3.8 + 1.0
+  const FARM_MIN_X = -4.9,       FARM_MAX_X = 5.0
+  const inFarm = (x, z) =>
+    x > FARM_MIN_X && x < FARM_MAX_X && z > FARM_MIN_Z && z < FARM_MAX_Z
 
-    if (dayPhase === 'day') {
-      initZombies()
+  // Day-start: ensure minimum daytime wanderers (keep survivors, top up if needed)
+  useEffect(() => {
+    if (dayPhase !== 'day') return
+    const dayCount = profile?.dayCount || 1
+    const minWanderers = Math.min(dayCount + 3, ALL_SPAWN_POS.length)
+    const validSpawns  = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
+    const alive = zombiesRef.current.filter(z => z.hp > 0).length
+
+    if (alive < minWanderers) {
+      const toSpawn = minWanderers - alive
+      const shuffled = [...validSpawns].sort(() => Math.random() - 0.5)
+      const added = []
+      for (let i = 0; i < toSpawn && i < shuffled.length; i++) {
+        const [sx, sz] = shuffled[i]
+        const id = nextZombieIdRef.current++
+        const z  = { id, x: sx, z: sz, hp: 10, lastHit: 0, _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0 }
+        zombiesRef.current.push(z)
+        added.push(z)
+      }
+      if (added.length > 0) {
+        setZombieHps(prev => {
+          const u = { ...prev }
+          added.forEach(z => { u[z.id] = 10 })
+          return u
+        })
+      }
     }
+    daySpawnRef.current  = zombiesRef.current.filter(z => z.hp > 0).length
+    spawnTimerRef.current = 0
+    allZombiesDeadRef.current = false
+  }, [dayPhase, profile?.dayCount])
+
+  // Night-start: spawn ever-increasing horde on top of surviving wanderers
+  useEffect(() => {
+    if (dayPhase !== 'night') return
+    const dayCount  = profile?.dayCount || 1
+    const batchSize = dayCount * 3 + 5
+    const validSpawns = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
+    const added = []
+    for (let i = 0; i < batchSize; i++) {
+      const [sx, sz] = validSpawns[Math.floor(Math.random() * validSpawns.length)]
+      const id = nextZombieIdRef.current++
+      const z  = {
+        id,
+        x: sx + (Math.random() - 0.5) * 2,
+        z: sz + (Math.random() - 0.5) * 2,
+        hp: 10, lastHit: 0,
+        _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0,
+      }
+      zombiesRef.current.push(z)
+      added.push(z)
+    }
+    setZombieHps(prev => {
+      const u = { ...prev }
+      added.forEach(z => { u[z.id] = 10 })
+      return u
+    })
+    spawnTimerRef.current = 0
+    daySpawnRef.current   = zombiesRef.current.filter(z => z.hp > 0).length
   }, [dayPhase, profile?.dayCount])
 
   // Ensure zombies initialized on first mount
   useEffect(() => {
     if (zombiesRef.current.length === 0) {
       const dayCount   = profile?.dayCount || 1
-      const spawnCount = Math.min(3 + dayCount * 2, ALL_SPAWN_POS.length)
-      const shuffled   = [...ALL_SPAWN_POS].sort(() => Math.random() - 0.5)
+      const spawnCount = Math.min(dayCount + 3, ALL_SPAWN_POS.length)
+      const validSpawns = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
+      const shuffled   = [...validSpawns].sort(() => Math.random() - 0.5)
       const newZombies = shuffled.slice(0, spawnCount).map(([x, z], i) => ({
         id: i, x, z, hp: 10, lastHit: 0,
         _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0
       }))
       zombiesRef.current = newZombies
-      nextZombieIdRef.current = spawnCount
+      nextZombieIdRef.current = newZombies.length
       setZombieHps(Object.fromEntries(newZombies.map(z => [z.id, 10])))
     }
   }, [])
 
   const findPlotAtPos = useCallback((wx, wz) => {
     let best = -1, bestD = Infinity
-    for (let i = 0; i < totalRows * 5; i++) {
-      const col = i % 5
-      const row = Math.floor(i / 5)
+    for (let i = 0; i < 5 * totalCols; i++) {
+      const col = i % totalCols
+      const row = Math.floor(i / totalCols)
       const px  = (col - 2) * PLOT_SPACING
-      const pz  = (row - (totalRows - 1) / 2) * PLOT_SPACING
+      const pz  = (row - 2) * PLOT_SPACING
       const d   = Math.sqrt((wx - px) ** 2 + (wz - pz) ** 2)
       if (d < bestD) { bestD = d; best = i }
     }
     return bestD < REACH ? best : -1
-  }, [totalRows])
+  }, [totalCols])
 
   const handlePlotClick = useCallback((index) => {
-    const col   = index % 5
-    const row   = Math.floor(index / 5)
+    const col   = index % totalCols
+    const row   = Math.floor(index / totalCols)
     const plotX = (col - 2) * PLOT_SPACING
-    const plotZ = (row - (totalRows - 1) / 2) * PLOT_SPACING
+    const plotZ = (row - 2) * PLOT_SPACING
     const dx    = playerPos.current.x - plotX
     const dz    = playerPos.current.z - plotZ
     if (Math.sqrt(dx * dx + dz * dz) > REACH) return
     swingRef.current = 1
     onPlotClick(index)
-  }, [onPlotClick, totalRows])
+  }, [onPlotClick, totalCols])
 
-  useFrame(({ camera }, delta) => {
+  useFrame(({ camera, clock }, delta) => {
     const isNight = dayPhaseRef.current === 'night'
 
     // Smooth ambient light transition
@@ -1602,6 +2042,9 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       const newX = playerPos.current.x + Math.sin(r) * moveDir * MOVE_SPEED * delta
       const newZ = playerPos.current.z + Math.cos(r) * moveDir * MOVE_SPEED * delta
 
+      // Compute east boundary dynamically based on farm size
+      const eastBound = (totalColsRef.current - 3) * PLOT_SPACING + 4
+
       // House collision
       const inX = newX + PLAYER_R > HOUSE_AABB.minX && newX - PLAYER_R < HOUSE_AABB.maxX
       const inZ = newZ + PLAYER_R > HOUSE_AABB.minZ && newZ - PLAYER_R < HOUSE_AABB.maxZ
@@ -1611,7 +2054,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
         if (!wasInX) {
           playerPos.current.z = Math.max(-35, Math.min(35, newZ))
         } else if (!wasInZ) {
-          playerPos.current.x = Math.max(-16, Math.min(16, newX))
+          playerPos.current.x = Math.max(-16, Math.min(eastBound, newX))
         }
       } else {
         // Castle walls — only allow passage through gate opening
@@ -1622,10 +2065,10 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
         // Block entry if not aligned with gate
         if (inCastle && !inGateX && atGateZ) {
           // At north wall but not in gate — block movement
-          playerPos.current.x = Math.max(-16, Math.min(16, playerPos.current.x))
+          playerPos.current.x = Math.max(-16, Math.min(eastBound, playerPos.current.x))
           playerPos.current.z = 12.5  // Push back outside
         } else {
-          playerPos.current.x = Math.max(-16, Math.min(16, newX))
+          playerPos.current.x = Math.max(-16, Math.min(eastBound, newX))
           playerPos.current.z = Math.max(-35, Math.min(35, newZ))
         }
       }
@@ -1640,29 +2083,36 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     const pz  = playerPos.current.z
     const now = Date.now()
 
-    // ── Zombie spawn during night ────────────────────────────────────────────
+    // ── Zombie trickle spawn during night (scales with day count) ────────────
     if (isNight) {
       spawnTimerRef.current += delta
-      const nightProgress = Math.min(spawnTimerRef.current / NIGHT_SECONDS, 1)  // 0-1
-      // Extra zombies spawned at night on top of the day-start count (scale 2→4)
-      const maxNightExtras = Math.floor(2 + nightProgress * 2)
-      const nightExtras    = nextZombieIdRef.current - daySpawnRef.current
-      const totalCap       = ALL_SPAWN_POS.length
+      const dayCount      = dayCountRef.current
+      const nightProgress = Math.min(spawnTimerRef.current / NIGHT_SECONDS, 1)
+      // Trickle: 2 per second at max, scaling with day count
+      const maxTrickle = Math.floor(dayCount * 2 + nightProgress * dayCount * 2)
+      const trickleSpawned = zombiesRef.current.filter(z => z.id >= daySpawnRef.current).length
 
-      if (nightExtras < maxNightExtras && nextZombieIdRef.current < totalCap) {
-        const spawnIdx = Math.floor(Math.random() * ALL_SPAWN_POS.length)
-        const [sx, sz] = ALL_SPAWN_POS[spawnIdx]
-        const newZombie = { id: nextZombieIdRef.current, x: sx, z: sz, hp: 10, lastHit: 0, _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0 }
-        zombiesRef.current.push(newZombie)
-        setZombieHps(prev => ({ ...prev, [newZombie.id]: 10 }))
-        nextZombieIdRef.current++
+      if (trickleSpawned < maxTrickle) {
+        const validSpawns = ALL_SPAWN_POS.filter(([sx, sz]) => !inFarm(sx, sz))
+        const [sx, sz] = validSpawns[Math.floor(Math.random() * validSpawns.length)]
+        const newZ = {
+          id: nextZombieIdRef.current++,
+          x: sx + (Math.random() - 0.5) * 2,
+          z: sz + (Math.random() - 0.5) * 2,
+          hp: 10, lastHit: 0,
+          _wanderDir: Math.random() * Math.PI * 2, _wanderTimer: 0,
+        }
+        zombiesRef.current.push(newZ)
+        setZombieHps(prev => ({ ...prev, [newZ.id]: 10 }))
       }
     }
 
     // ── Zombie AI ────────────────────────────────────────────────────────────
     const ZOMBIE_SPEED  = 1.6
+    const WANDER_SPEED  = 0.6
     const HIT_DIST      = 1.2
     const HIT_COOLDOWN  = 1000
+    const playerInWild  = pz < WILD_BOUNDARY   // player entered wilderness
 
     let hpChanged  = false
     const hpUpdates = {}
@@ -1676,11 +2126,10 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       const dist = Math.sqrt(dx * dx + dz * dz)
 
       if (isNight) {
-        // If gate is intact, block zombies from entering castle (z > CASTLE_ENTRY_Z) unless gate is broken
+        // If gate is intact, block zombies from entering castle unless gate is broken
         const gateIntact = gateHpRef.current > 0
         const approachingGate = z.z > 10 && z.z < 14 && Math.abs(z.x) < 3.5
         if (gateIntact && approachingGate) {
-          // Attack the gate instead of moving through
           if (now - gateHitRef.current > 2000) {
             gateHitRef.current = now
             const newGateHp = Math.max(0, gateHpRef.current - 1)
@@ -1688,16 +2137,55 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
             setGateHp(newGateHp)
           }
         } else if (dist > HIT_DIST) {
-          // Night: chase player anywhere
+          // Night: chase player
           z.x += (dx / dist) * ZOMBIE_SPEED * delta
           z.z += (dz / dist) * ZOMBIE_SPEED * delta
         }
       } else {
-        // Day: stay dead (won't move)
+        // Day: zombies wander in wilderness; attack player if they enter wilderness
+        const inWild = z.z < WILD_BOUNDARY
+        if (!inWild) continue  // daytime zombies not yet in wilderness stay put
+
+        if (playerInWild && dist < 18) {
+          // Player entered wilderness — chase and attack
+          if (dist > HIT_DIST) {
+            z.x += (dx / dist) * ZOMBIE_SPEED * delta
+            z.z += (dz / dist) * ZOMBIE_SPEED * delta
+          }
+          if (dist > 0.1) z._wanderDir = Math.atan2(dx, dz)
+        } else {
+          // Random wander
+          z._wanderTimer = (z._wanderTimer || 0) - delta
+          if (z._wanderTimer <= 0) {
+            z._wanderDir = Math.random() * Math.PI * 2
+            z._wanderTimer = 1.5 + Math.random() * 2.5
+          }
+          z.x += Math.sin(z._wanderDir) * WANDER_SPEED * delta
+          z.z += Math.cos(z._wanderDir) * WANDER_SPEED * delta
+          // Bounce off wilderness boundary (don't let them walk into the farm area)
+          if (z.z >= WILD_BOUNDARY - 0.5) { z._wanderDir += Math.PI; z.z = WILD_BOUNDARY - 0.6 }
+          if (z.z < -38) { z._wanderDir += Math.PI; z.z = -37.5 }
+          if (z.x < -18) { z._wanderDir += Math.PI * 0.5; z.x = -17.5 }
+          if (z.x >  18) { z._wanderDir -= Math.PI * 0.5; z.x =  17.5 }
+        }
+
+        // Update mesh
+        const mesh = zombieMeshMap.current.get(z.id)
+        if (mesh) {
+          mesh.position.x = z.x
+          mesh.position.z = z.z
+          if (dist > 0.1) mesh.rotation.y = Math.atan2(dx, dz)
+        }
+
+        // Day attack damage if player in wilderness
+        if (playerInWild && dist < HIT_DIST && now - z.lastHit > HIT_COOLDOWN) {
+          z.lastHit = now
+          onPlayerDamaged?.()
+        }
         continue
       }
 
-      // Update mesh directly
+      // Night: update mesh position
       const mesh = zombieMeshMap.current.get(z.id)
       if (mesh) {
         mesh.position.x = z.x
@@ -1705,7 +2193,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
         if (dist > 0.1) mesh.rotation.y = Math.atan2(dx, dz)
       }
 
-      // Deal damage to player
+      // Night: deal damage to player
       if (dist < HIT_DIST && now - z.lastHit > HIT_COOLDOWN) {
         z.lastHit = now
         onPlayerDamaged?.()
@@ -1722,29 +2210,86 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 
     // ── Zombies destroy plants (night only) ──────────────────────────────────
     if (isNight) {
-      const PLOT_SPACING = 1.9
       const plotsToDestroy = []
       for (const z of zombiesRef.current) {
         if (z.hp <= 0) continue
-        // Check if zombie is in farm area (z > WILD_BOUNDARY)
         if (z.z <= WILD_BOUNDARY) continue
-
-        // Find plots near zombie
         for (let i = 0; i < plots.length; i++) {
-          if (!plots[i]) continue  // Already empty
-          const col = i % 5
-          const row = Math.floor(i / 5)
-          const totalRows = 5 + (profile?.extraRows || 0)
-          const px = (col - 2) * PLOT_SPACING
-          const pz = (row - (totalRows - 1) / 2) * PLOT_SPACING
-          const d = Math.sqrt((z.x - px) ** 2 + (z.z - pz) ** 2)
-          if (d < 1.5) {
+          if (!plots[i]) continue
+          const col = i % totalCols
+          const row = Math.floor(i / totalCols)
+          const ppx = (col - 2) * PLOT_SPACING
+          const ppz = (row - 2) * PLOT_SPACING
+          if (Math.sqrt((z.x - ppx) ** 2 + (z.z - ppz) ** 2) < 1.5) {
             plotsToDestroy.push(i)
           }
         }
       }
       if (plotsToDestroy.length > 0) {
         onPlayerDamaged?.({ destroyPlots: plotsToDestroy })
+      }
+    }
+
+    // ── Arrow projectiles (bow + archer towers) — positions updated via refs ──
+    const ARROW_SPEED = 22
+    const deadArrows  = new Set()
+    for (const arr of arrowsRef.current) {
+      arr.x += arr.dx * ARROW_SPEED * delta
+      arr.z += arr.dz * ARROW_SPEED * delta
+      arr.remainingDist -= ARROW_SPEED * delta
+      // Update mesh position directly — no React re-render needed
+      const arrowMesh = arrowMeshMap.current.get(arr.id)
+      if (arrowMesh) { arrowMesh.position.x = arr.x; arrowMesh.position.z = arr.z }
+      if (arr.remainingDist <= 0) { deadArrows.add(arr.id); continue }
+      for (const z of zombiesRef.current) {
+        if (z.hp <= 0) continue
+        if (Math.sqrt((arr.x - z.x) ** 2 + (arr.z - z.z) ** 2) < 0.8) {
+          const wasAlive = z.hp > 0
+          z.hp = Math.max(0, z.hp - arr.damage)
+          // Update HP bar directly via ref
+          const hpFill = zombieHpBarMap.current.get(z.id)
+          if (hpFill) { const f = z.hp/10; hpFill.scale.x = Math.max(0.001,f); hpFill.position.x = -0.35*(1-Math.max(0.001,f)) }
+          if (wasAlive && z.hp <= 0) { hpUpdates[z.id] = 0; hpChanged = true; onPlayerDamaged?.({ killed: true }) }
+          deadArrows.add(arr.id)
+          break
+        }
+      }
+    }
+    if (deadArrows.size > 0) {
+      arrowsRef.current = arrowsRef.current.filter(a => !deadArrows.has(a.id))
+      setArrowRenders([...arrowsRef.current])
+    }
+
+    // ── Archer tower auto-shoot (night only) ──────────────────────────────────
+    if (isNight) {
+      const archerStats = getArcherStats(castleUpgradesRef.current)
+      if (archerStats) {
+        archerTimer.current += delta
+        if (archerTimer.current >= archerStats.cooldown) {
+          archerTimer.current = 0
+          for (const [tx, tz] of TOWER_POSITIONS) {
+            let nearestZ = null, nearestDist = 30
+            for (const z of zombiesRef.current) {
+              if (z.hp <= 0) continue
+              const d = Math.sqrt((z.x - tx) ** 2 + (z.z - tz) ** 2)
+              if (d < nearestDist) { nearestDist = d; nearestZ = z }
+            }
+            if (nearestZ) {
+              const adx = nearestZ.x - tx, adz = nearestZ.z - tz
+              const dist = Math.sqrt(adx * adx + adz * adz)
+              arrowsRef.current.push({
+                id: nextArrowId.current++,
+                x: tx, y: 2.8, z: tz,
+                dx: adx / dist, dz: adz / dist,
+                remainingDist: dist + 4,
+                damage: archerStats.damage,
+              })
+            }
+          }
+          setArrowRenders([...arrowsRef.current])
+        }
+      } else {
+        archerTimer.current = 0
       }
     }
 
@@ -1782,26 +2327,41 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
         onTalkToNpc?.(nearNpcRef.current)
       } else {
         // 3. Try to attack a zombie in front
-        const r       = playerRot.current
-        const isBow   = weaponRangeRef.current > 0
-        const atkDist = isBow ? weaponRangeRef.current : PLOT_SPACING * 2
-        const atkX    = px + Math.sin(r) * atkDist
-        const atkZ    = pz + Math.cos(r) * atkDist
+        const r     = playerRot.current
+        const isBow = weaponRangeRef.current > 0
         let zombieHit = false
-        for (const z of zombiesRef.current) {
-          if (z.hp <= 0) continue
-          const d = Math.sqrt((atkX - z.x) ** 2 + (atkZ - z.z) ** 2)
-          if (d < (isBow ? PLOT_SPACING : PLOT_SPACING * 2)) {
-            const wasAlive = z.hp > 0
-            z.hp = Math.max(0, z.hp - (attackDmgRef.current || 1))
-            hpUpdates[z.id] = z.hp
-            hpChanged = true
-            zombieHit = true
-            // Killed a zombie — fire callback with kill reward
-            if (wasAlive && z.hp <= 0) {
-              onPlayerDamaged?.({ killed: true })
+
+        if (isBow) {
+          // Bow: fire arrow projectile (10 plot-spaces max range)
+          const bowMaxDist = 10 * PLOT_SPACING
+          arrowsRef.current.push({
+            id: nextArrowId.current++,
+            x: px + Math.sin(r) * 0.6, y: 1.1, z: pz + Math.cos(r) * 0.6,
+            dx: Math.sin(r), dz: Math.cos(r),
+            remainingDist: bowMaxDist,
+            damage: attackDmgRef.current || 1,
+          })
+          setArrowRenders([...arrowsRef.current])
+          swingRef.current = 1
+          zombieHit = true   // prevent melee fallthrough
+        } else {
+          // Melee: instant hit — range is 1 plot distance
+          const atkDist = PLOT_SPACING
+          const atkX    = px + Math.sin(r) * atkDist
+          const atkZ    = pz + Math.cos(r) * atkDist
+          for (const z of zombiesRef.current) {
+            if (z.hp <= 0) continue
+            const d = Math.sqrt((atkX - z.x) ** 2 + (atkZ - z.z) ** 2)
+            if (d < PLOT_SPACING) {
+              const wasAlive = z.hp > 0
+              z.hp = Math.max(0, z.hp - (attackDmgRef.current || 1))
+              // Update HP bar via ref
+              const hpFill = zombieHpBarMap.current.get(z.id)
+              if (hpFill) { const f = z.hp/10; hpFill.scale.x = Math.max(0.001,f); hpFill.position.x = -0.35*(1-Math.max(0.001,f)) }
+              zombieHit = true
+              if (wasAlive && z.hp <= 0) { hpUpdates[z.id] = 0; hpChanged = true; onPlayerDamaged?.({ killed: true }) }
+              break
             }
-            break
           }
         }
         if (!zombieHit) {
@@ -1851,6 +2411,20 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 
     if (hpChanged) setZombieHps(prev => ({ ...prev, ...hpUpdates }))
 
+    // ── Centralized zombie leg animation (one loop, no per-zombie useFrame) ──
+    const t = clock.elapsedTime
+    for (const z of zombiesRef.current) {
+      if (z.hp <= 0) continue
+      const legs = zombieLegMap.current.get(z.id)
+      if (!legs) continue
+      const isMoving = isNight || z.z < WILD_BOUNDARY
+      if (isMoving) {
+        const swing = Math.sin((t + z.id * 0.31) * 8) * 0.5
+        if (legs.left)  legs.left.rotation.x  =  swing
+        if (legs.right) legs.right.rotation.x = -swing
+      }
+    }
+
     // ── Third-person camera ───────────────────────────────────────────────────
     const a = playerRot.current
     _camTarget.set(px - Math.sin(a) * 7, playerPos.current.y + 5.5, pz - Math.cos(a) * 7)
@@ -1877,17 +2451,30 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 
       <Ground/>
       <Clouds/>
-      <Fence totalRows={totalRows}/>
+      <Fence totalCols={totalCols}/>
       <House3D onEnter={onHouseEnter} houseLevel={profile?.houseLevel || 0}/>
       <Wilderness treeHps={treeHps} choppedTrees={choppedTrees}/>
       <CastleCity gateHp={gateHp}/>
 
-      {Array.from({length: totalRows * 5}).map((_,i) => (
-        <GardenPlot key={i} index={i} plot={plots[i]??null} onPlotClick={handlePlotClick} totalRows={totalRows}/>
+      {/* Archer watch towers (only when archers upgrade is owned) */}
+      {profile?.castleUpgrades?.archers && TOWER_POSITIONS.map(([tx, tz], i) => (
+        <WatchTower key={`tower${i}`} x={tx} z={tz}/>
+      ))}
+
+      {Array.from({length: 5 * totalCols}).map((_,i) => (
+        <GardenPlot key={i} index={i} plot={plots[i]??null} onPlotClick={handlePlotClick} totalCols={totalCols}/>
       ))}
 
       {zombiesRef.current.map(z => (
-        <ZombieBody key={z.id} zombie={z} hp={zombieHps[z.id] ?? 10} meshMapRef={zombieMeshMap}/>
+        <ZombieBody key={z.id} zombie={z} hp={zombieHps[z.id] ?? 10}
+          meshMapRef={zombieMeshMap} legMapRef={zombieLegMap} hpBarMapRef={zombieHpBarMap}/>
+      ))}
+
+      {/* Arrow projectiles — initial props only; position updated via meshMapRef */}
+      {arrowRenders.map(a => (
+        <ArrowProjectile key={a.id} id={a.id}
+          initX={a.x} initY={a.y} initZ={a.z} initDx={a.dx} initDz={a.dz}
+          meshMapRef={arrowMeshMap}/>
       ))}
 
       <PlayerCharacter playerRef={playerRef} outfit={outfit} swingRef={swingRef}/>

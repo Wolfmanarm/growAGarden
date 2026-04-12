@@ -1,8 +1,9 @@
-1: when log in doesnt work, everything on the page disapeared. fix this and just show a "wrong username or password" error message.
-2: zombies cannot move during the day. fix this.
-3: fix how the cabin looks.
-4: fix how the shops in the city look.
-5: do not allow zombies to spawn in the farming field.
-6: when the bow is equiped, clicking to attack should throw a small arrow projectile that does the bow damage. it will do damage if it strikes a target within 10 plot spaces. after that the arrow disapears. 
-7: some zombies seem to be invisible. fix this.
-8: make the chpped down trees re-spawn every morning.
+1: filters in the plant section of the garden shop are not properly visable when trying to click them. fix this.
+2: player is blocked from reaching the end of the fully upgraded farm. fix this by extending the walkable area eastwards.
+3: arrow projectiles are glitchy and laggy. make them flow more smoothly.
+4: zombies are not walking around randomly when in the forest during day time. fix this by having them walk around randomly.
+5: when the player enters the wilderness in the day time have the zombies attack the player.
+6: make sure an ever increasing group of zombies spawns at the start of every night. zombies attacking the castle will include all left over zombies from the wilderness just as it is now.
+7: make the sword only do damage when a zombie is within 1 plot distance.
+8: when logging into the game. give the player a choice, "regular mode" or "hardcore mode" regular mode is the same as it is now. In hardcore mode, when a player dies they are given a message that displays their stats, such as days passed and zombies killed, then they restart with no upgrades, money, or progress at all on day 1.
+9: when there is a large group of zombies, for example more than 10, their walk is laggy. fix this.

@@ -17,8 +17,8 @@ const SHOP_ITEMS = {
     baseCost: 25, maxCount: 99,
   },
   plot_expansion: {
-    id: 'plot_expansion', name: 'Extra Plot Row', emoji: '🪴',
-    description: 'Unlock 5 more plots! (up to 20 rows)',
+    id: 'plot_expansion', name: 'Expand Farm East', emoji: '🪴',
+    description: 'Adds a new column of 5 plots to the east side of your farm!',
     baseCost: 80, maxCount: 15,
   },
   refill_charges: {
@@ -95,9 +95,30 @@ const AXES_SHOP = [
   { id: 'steel_axe',  name: 'Steel Axe',  emoji: '🔱',  chopDamage: 4, cost: 1500, killsRequired: 8 },
 ]
 const SAWMILL_UPGRADES = [
-  { id: 'sawmill_1', name: 'Basic Sawmill',   emoji: '🪚', cost: 500,  woodMult: 1.5, description: '+50% wood from trees.' },
-  { id: 'sawmill_2', name: 'Iron Sawmill',    emoji: '⚙️',  cost: 1500, woodMult: 2.0, description: '2× wood from trees.'   },
-  { id: 'sawmill_3', name: 'Master Sawmill',  emoji: '🏭', cost: 4000, woodMult: 3.0, description: '3× wood from trees.'   },
+  { id: 'sawmill_1',  name: 'Basic Sawmill',    emoji: '🪚', cost: 500,    woodMult: 1.5,  description: '1.5× wood income.'   },
+  { id: 'sawmill_2',  name: 'Iron Sawmill',     emoji: '⚙️',  cost: 1500,   woodMult: 2.0,  description: '2× wood income.'     },
+  { id: 'sawmill_3',  name: 'Master Sawmill',   emoji: '🏭', cost: 4000,   woodMult: 3.0,  description: '3× wood income.'     },
+  { id: 'sawmill_4',  name: 'Alloy Sawmill',    emoji: '⚒️',  cost: 8000,   woodMult: 5.0,  description: '5× wood income.'     },
+  { id: 'sawmill_5',  name: 'Steel Sawmill',    emoji: '🔧', cost: 18000,  woodMult: 8.0,  description: '8× wood income.'     },
+  { id: 'sawmill_6',  name: 'Diamond Saw',      emoji: '💎', cost: 40000,  woodMult: 12.0, description: '12× wood income.'    },
+  { id: 'sawmill_7',  name: 'Turbo Sawmill',    emoji: '⚡', cost: 80000,  woodMult: 20.0, description: '20× wood income.'    },
+  { id: 'sawmill_8',  name: 'Quantum Saw',      emoji: '🔬', cost: 150000, woodMult: 35.0, description: '35× wood income.'    },
+  { id: 'sawmill_9',  name: 'Plasma Sawmill',   emoji: '🌟', cost: 300000, woodMult: 60.0, description: '60× wood income.'    },
+  { id: 'sawmill_10', name: 'Legendary Saw',    emoji: '👑', cost: 500000, woodMult: 100.0,description: '100× wood income.'   },
+]
+
+// ─── Permanent fertilizer upgrade tiers ──────────────────────────────────────
+const FERTILIZER_UPGRADES = [
+  { id: 'fert_1',  name: 'Bone Meal',       emoji: '🦴', cost: 200,    speedMult: 1.5,  description: 'Plants grow 1.5× faster permanently.' },
+  { id: 'fert_2',  name: 'Compost Mix',     emoji: '🌿', cost: 500,    speedMult: 2.0,  description: '2× permanent grow speed.'             },
+  { id: 'fert_3',  name: 'Growth Serum',    emoji: '🧪', cost: 1500,   speedMult: 3.0,  description: '3× permanent grow speed.'             },
+  { id: 'fert_4',  name: 'Super Grow',      emoji: '⚗️',  cost: 4000,   speedMult: 5.0,  description: '5× permanent grow speed.'             },
+  { id: 'fert_5',  name: 'Turbo Bloom',     emoji: '🌸', cost: 10000,  speedMult: 8.0,  description: '8× permanent grow speed.'             },
+  { id: 'fert_6',  name: 'Magic Compost',   emoji: '✨', cost: 25000,  speedMult: 12.0, description: '12× permanent grow speed.'            },
+  { id: 'fert_7',  name: 'Hyper Growth',    emoji: '🌱', cost: 60000,  speedMult: 20.0, description: '20× permanent grow speed.'            },
+  { id: 'fert_8',  name: 'Time Warp Mix',   emoji: '⏰', cost: 120000, speedMult: 35.0, description: '35× permanent grow speed.'            },
+  { id: 'fert_9',  name: 'Quantum Feed',    emoji: '🔬', cost: 250000, speedMult: 60.0, description: '60× permanent grow speed.'            },
+  { id: 'fert_10', name: 'Legend Brew',     emoji: '👑', cost: 500000, speedMult: 100.0,description: '100× permanent grow speed.'           },
 ]
 const TREE_BASE_REWARD = 25   // petals per tree
 
@@ -105,10 +126,13 @@ const DAY_SECONDS   = 5 * 60   // 5 minutes
 const NIGHT_SECONDS = 2 * 60   // 2 minutes
 
 const CASTLE_UPGRADES = [
-  { id: 'wall_stone',   name: 'Stone Walls',     emoji: '🏰', cost: 1000, description: 'Stronger walls slowed zombies.' },
-  { id: 'wall_iron',    name: 'Iron Reinforced', emoji: '⛓️', cost: 3000, description: 'Heavy iron plating keeps zombies out.' },
-  { id: 'archers',      name: 'Add Archers',     emoji: '🏹', cost: 2000, description: 'Archers deal 2 damage per 5sec.' },
-  { id: 'watchtower',   name: 'Watchtower',      emoji: '🗼', cost: 5000, description: 'See zombies from afar.' },
+  { id: 'wall_stone',  name: 'Stone Walls',     emoji: '🏰', cost: 1000,  requires: null,         description: 'Stronger walls slowed zombies.' },
+  { id: 'wall_iron',   name: 'Iron Reinforced', emoji: '⛓️', cost: 3000,  requires: 'wall_stone',  description: 'Heavy iron plating keeps zombies out.' },
+  { id: 'archers',     name: 'Add Archers',     emoji: '🏹', cost: 2000,  requires: null,         description: 'Builds watchtowers. Archers deal 2 dmg every 5s.' },
+  { id: 'archers_2',   name: 'Veteran Archers', emoji: '🎯', cost: 5000,  requires: 'archers',    description: 'Upgrade: 3 dmg every 4s per tower.' },
+  { id: 'archers_3',   name: 'Expert Archers',  emoji: '⚡', cost: 12000, requires: 'archers_2',  description: 'Upgrade: 5 dmg every 3s per tower.' },
+  { id: 'archers_4',   name: 'Elite Archers',   emoji: '👑', cost: 30000, requires: 'archers_3',  description: 'Upgrade: 7 dmg every 2s per tower.' },
+  { id: 'watchtower',  name: 'Watchtower',      emoji: '🗼', cost: 5000,  requires: null,         description: 'See zombies from afar.' },
 ]
 
 const DEFAULT_OUTFIT = {
@@ -245,6 +269,8 @@ function hydrateProfile(data) {
   if (!data.ownedAxes)               data.ownedAxes           = {}
   if (data.equippedAxe        == null) data.equippedAxe       = null
   if (!data.sawmillUpgrades)         data.sawmillUpgrades     = {}
+  if (data.fertilizerTier    == null) data.fertilizerTier     = 0
+  if (!data.gameMode)                data.gameMode            = 'regular'
   return data
 }
 
@@ -288,9 +314,43 @@ function defaultProfile(username = '') {
     ownedAxes: {},
     equippedAxe: null,
     sawmillUpgrades: {},
+    fertilizerTier: 0,
+    gameMode: 'regular',
     outfit: { ...DEFAULT_OUTFIT },
     wardrobeOwned: { ...DEFAULT_WARDROBE_OWNED },
   }
+}
+
+// ─── Hardcore game over screen ────────────────────────────────────────────────
+function HardcoreGameOverScreen({ days, kills, onDismiss }) {
+  return (
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.85)' }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      <motion.div className="bg-gray-900 border-2 border-red-700 rounded-3xl shadow-2xl w-full max-w-sm text-center p-8"
+        initial={{ scale: 0.8, y: 40 }} animate={{ scale: 1, y: 0 }}
+        transition={{ type: 'spring', damping: 16 }}>
+        <div className="text-6xl mb-3">💀</div>
+        <h2 className="text-3xl font-extrabold text-red-400 mb-1">You Died</h2>
+        <p className="text-gray-400 text-sm mb-6">All progress has been lost.</p>
+        <div className="space-y-3 mb-8">
+          <div className="bg-gray-800 rounded-2xl px-5 py-3 flex items-center justify-between">
+            <span className="text-gray-400 text-sm font-semibold">📅 Days Survived</span>
+            <span className="text-white font-extrabold text-lg">{days}</span>
+          </div>
+          <div className="bg-gray-800 rounded-2xl px-5 py-3 flex items-center justify-between">
+            <span className="text-gray-400 text-sm font-semibold">🧟 Zombies Killed</span>
+            <span className="text-white font-extrabold text-lg">{kills}</span>
+          </div>
+        </div>
+        <motion.button onClick={onDismiss}
+          className="w-full bg-gradient-to-r from-red-600 to-red-500 text-white font-bold rounded-xl py-3 shadow-lg"
+          whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }}>
+          Try Again 💀
+        </motion.button>
+      </motion.div>
+    </motion.div>
+  )
 }
 
 // ─── Login overlay ────────────────────────────────────────────────────────────
@@ -299,6 +359,7 @@ function LoginOverlay({ onLogin }) {
   const [name, setName]         = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm]   = useState('')
+  const [mode, setMode]         = useState('regular') // 'regular' | 'hardcore'
   const [loading, setLoading]   = useState(false)
   const [error, setError]       = useState('')
 
@@ -315,8 +376,9 @@ function LoginOverlay({ onLogin }) {
     }
     setError('')
     setLoading(true)
-    await onLogin(u, password, tab === 'register')
+    const err = await onLogin(u, password, tab === 'register', mode)
     setLoading(false)
+    if (err) { setError(err); return }
   }
 
   return (
@@ -357,11 +419,33 @@ function LoginOverlay({ onLogin }) {
               placeholder="At least 4 characters" maxLength={50} className={inputCls}/>
           </div>
           {tab === 'register' && (
-            <div>
-              <label className="block text-xs font-semibold text-green-700 mb-1">Confirm Password</label>
-              <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
-                placeholder="Repeat your password" maxLength={50} className={inputCls}/>
-            </div>
+            <>
+              <div>
+                <label className="block text-xs font-semibold text-green-700 mb-1">Confirm Password</label>
+                <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
+                  placeholder="Repeat your password" maxLength={50} className={inputCls}/>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-green-700 mb-1">Game Mode</label>
+                <div className="flex gap-2">
+                  {['regular', 'hardcore'].map(m => (
+                    <button key={m} type="button" onClick={() => setMode(m)}
+                      className={`flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-colors ${
+                        mode === m
+                          ? m === 'hardcore' ? 'bg-red-500 text-white border-red-500' : 'bg-green-500 text-white border-green-500'
+                          : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
+                      }`}>
+                      {m === 'regular' ? '🌿 Regular' : '💀 Hardcore'}
+                    </button>
+                  ))}
+                </div>
+                {mode === 'hardcore' && (
+                  <p className="text-xs text-red-500 mt-1 font-medium">
+                    On death: all progress is lost and you restart from Day 1.
+                  </p>
+                )}
+              </div>
+            </>
           )}
           {error && <p className="text-red-500 text-xs font-semibold">{error}</p>}
           <motion.button type="submit" disabled={loading}
@@ -376,7 +460,7 @@ function LoginOverlay({ onLogin }) {
 }
 
 // ─── Shop panel ───────────────────────────────────────────────────────────────
-function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onClose }) {
+function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onBuyFertUpgrade, onClose }) {
   const [tab, setTab] = useState('seeds')
   const [tierFilter, setTierFilter] = useState(0)
   const [showUnlockedOnly, setShowUnlockedOnly] = useState(false)
@@ -419,15 +503,15 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onClose }) {
         </div>
 
         {tab === 'seeds' && (
-          <div className="flex gap-1.5 px-4 py-2 border-b border-gray-100 overflow-x-auto items-center sticky top-0 bg-white z-10">
+          <div className="flex flex-wrap gap-2 px-4 py-2.5 border-b border-gray-100 bg-white">
             {[0, 1, 2, 3, 4, 5].map(t => (
               <button key={t} onClick={() => setTierFilter(t)}
-                className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full transition-colors ${tierFilter === t ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${tierFilter === t ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
                 {t === 0 ? 'All' : ['', 'Common', 'Uncommon', 'Rare', 'Epic', 'Legendary'][t]}
               </button>
             ))}
             <button onClick={() => setShowUnlockedOnly(v => !v)}
-              className={`flex-shrink-0 text-xs font-bold px-2.5 py-1 rounded-full transition-colors ml-1 ${showUnlockedOnly ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+              className={`text-xs font-bold px-3 py-1.5 rounded-full transition-colors ${showUnlockedOnly ? 'bg-purple-500 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
               🔓 Unlocked
             </button>
           </div>
@@ -476,34 +560,70 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onClose }) {
             )
           })}
 
-          {tab === 'upgrades' && Object.values(SHOP_ITEMS).map(item => {
-            const count = item.id === 'waterer'       ? profile.waterers
-                        : item.id === 'fertilizer'    ? (profile.hasFertilizer ? 1 : 0)
-                        : item.id === 'plot_expansion' ? (profile.extraRows || 0)
-                        : 0   // refill_charges has no count display
-            const cost  = item.id === 'plot_expansion'
-              ? item.baseCost * (1 + (profile.extraRows || 0)) : item.baseCost
-            const canAfford = profile.petals >= cost
-            const maxed     = item.id !== 'refill_charges' && count >= item.maxCount
-            return (
-              <motion.div key={item.id} whileTap={{ scale: 0.98 }}
-                className="flex items-center gap-3 p-3 rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-sky-50">
-                <span className="text-3xl">{item.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-gray-800">{item.name}</div>
-                  <div className="text-xs text-gray-500">{item.description}</div>
-                  {item.id === 'waterer' && <div className="text-xs text-blue-500 mt-0.5">{count} / {item.maxCount} · {profile.autoHarvestCharges} charges left</div>}
-                  {item.id === 'plot_expansion' && <div className="text-xs text-blue-500 mt-0.5">{count} / {item.maxCount}</div>}
-                </div>
-                <motion.button onClick={() => onBuyItem(item.id, cost)}
-                  disabled={!canAfford || maxed}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${maxed ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : canAfford ? 'bg-white text-gray-700 shadow hover:shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                  whileTap={canAfford && !maxed ? { scale: 0.9 } : {}}>
-                  {maxed ? 'Max' : `🌸 ${cost.toLocaleString()}`}
-                </motion.button>
-              </motion.div>
-            )
-          })}
+          {tab === 'upgrades' && (
+            <>
+              {Object.values(SHOP_ITEMS).map(item => {
+                const count = item.id === 'waterer'       ? profile.waterers
+                            : item.id === 'fertilizer'    ? (profile.hasFertilizer ? 1 : 0)
+                            : item.id === 'plot_expansion' ? (profile.extraRows || 0)
+                            : 0
+                const cost  = item.id === 'plot_expansion'
+                  ? item.baseCost * (1 + (profile.extraRows || 0)) : item.baseCost
+                const canAfford = profile.petals >= cost
+                const maxed     = item.id !== 'refill_charges' && count >= item.maxCount
+                return (
+                  <motion.div key={item.id} whileTap={{ scale: 0.98 }}
+                    className="flex items-center gap-3 p-3 rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-sky-50">
+                    <span className="text-3xl">{item.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-gray-800">{item.name}</div>
+                      <div className="text-xs text-gray-500">{item.description}</div>
+                      {item.id === 'waterer' && <div className="text-xs text-blue-500 mt-0.5">{count} / {item.maxCount} · {profile.autoHarvestCharges} charges left</div>}
+                      {item.id === 'plot_expansion' && <div className="text-xs text-blue-500 mt-0.5">{count} / {item.maxCount}</div>}
+                    </div>
+                    <motion.button onClick={() => onBuyItem(item.id, cost)}
+                      disabled={!canAfford || maxed}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-xl ${maxed ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : canAfford ? 'bg-white text-gray-700 shadow hover:shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                      whileTap={canAfford && !maxed ? { scale: 0.9 } : {}}>
+                      {maxed ? 'Max' : `🌸 ${cost.toLocaleString()}`}
+                    </motion.button>
+                  </motion.div>
+                )
+              })}
+
+              {/* ── Permanent Fertilizer Upgrades ─────────────────────────── */}
+              <div className="mt-3 mb-1 px-1">
+                <p className="text-xs font-bold text-green-600 uppercase tracking-wider">🌿 Permanent Fertilizer</p>
+                {(profile.fertilizerTier || 0) > 0 && (
+                  <p className="text-xs text-green-500 mt-0.5">
+                    Currently {FERTILIZER_UPGRADES[(profile.fertilizerTier||1)-1]?.speedMult}× grow speed
+                  </p>
+                )}
+              </div>
+              {FERTILIZER_UPGRADES.map((upgrade, idx) => {
+                const currentTier = profile.fertilizerTier || 0
+                const isOwned = currentTier > idx
+                const isNext  = currentTier === idx
+                const canAfford = profile.petals >= upgrade.cost
+                return (
+                  <motion.div key={upgrade.id} whileTap={isNext && canAfford ? { scale: 0.98 } : {}}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${isOwned ? 'border-green-300 bg-green-50' : isNext ? 'border-lime-200 bg-lime-50' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                    <span className="text-3xl">{upgrade.emoji}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-gray-800 text-sm">{upgrade.name}</div>
+                      <div className="text-xs text-gray-500">{upgrade.description}</div>
+                    </div>
+                    <motion.button onClick={() => isNext && onBuyFertUpgrade()}
+                      disabled={!isNext || !canAfford}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-xl flex-shrink-0 ${isOwned ? 'bg-green-100 text-green-700' : isNext && canAfford ? 'bg-lime-500 text-white shadow hover:bg-lime-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                      whileTap={isNext && canAfford ? { scale: 0.9 } : {}}>
+                      {isOwned ? '✓ Done' : isNext ? `🌸 ${upgrade.cost.toLocaleString()}` : '🔒'}
+                    </motion.button>
+                  </motion.div>
+                )
+              })}
+            </>
+          )}
         </div>
       </motion.div>
     </motion.div>
@@ -1104,20 +1224,23 @@ function CastleUpgradePanel({ profile, onBuyUpgrade, onClose }) {
         </div>
         <div className="space-y-2">
           {CASTLE_UPGRADES.map(upgrade => {
-            const owned     = (profile.castleUpgrades || {})[upgrade.id]
-            const canAfford = profile.petals >= upgrade.cost
+            const owned       = !!(profile.castleUpgrades || {})[upgrade.id]
+            const prereqMet   = !upgrade.requires || !!(profile.castleUpgrades || {})[upgrade.requires]
+            const canAfford   = profile.petals >= upgrade.cost
+            const locked      = !owned && !prereqMet
             return (
-              <div key={upgrade.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${owned ? 'border-green-300 bg-green-50' : 'border-gray-200 bg-white'}`}>
+              <div key={upgrade.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${owned ? 'border-green-300 bg-green-50' : locked ? 'border-gray-100 bg-gray-50 opacity-60' : 'border-gray-200 bg-white'}`}>
                 <span className="text-3xl">{upgrade.emoji}</span>
                 <div className="flex-1">
                   <div className="font-bold text-gray-800">{upgrade.name}</div>
                   <div className="text-xs text-gray-500">{upgrade.description}</div>
+                  {locked && <div className="text-xs text-orange-500 mt-0.5">🔒 Requires: {CASTLE_UPGRADES.find(u=>u.id===upgrade.requires)?.name}</div>}
                 </div>
-                <motion.button onClick={() => !owned && onBuyUpgrade(upgrade)}
-                  disabled={owned || !canAfford}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${owned ? 'bg-green-100 text-green-700' : canAfford ? 'bg-amber-500 text-white shadow hover:bg-amber-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                  whileTap={!owned && canAfford ? { scale: 0.9 } : {}}>
-                  {owned ? '✓ Built' : `🌸 ${upgrade.cost}`}
+                <motion.button onClick={() => !owned && !locked && onBuyUpgrade(upgrade)}
+                  disabled={owned || locked || !canAfford}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${owned ? 'bg-green-100 text-green-700' : locked ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : canAfford ? 'bg-amber-500 text-white shadow hover:bg-amber-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  whileTap={!owned && !locked && canAfford ? { scale: 0.9 } : {}}>
+                  {owned ? '✓ Built' : locked ? '🔒' : `🌸 ${upgrade.cost.toLocaleString()}`}
                 </motion.button>
               </div>
             )
@@ -1145,6 +1268,7 @@ export default function App() {
   // Combat & world state
   const [dayPhase, setDayPhase]       = useState('day')
   const [playerHp, setPlayerHp]       = useState(10)
+  const [hardcoreGameOver, setHardcoreGameOver] = useState(null)  // { days, kills } | null
   const [showFeedback, setShowFeedback] = useState(false)
   const [castleShop, setCastleShop]   = useState(null)   // 'weapons'|'carpentry'|'potions'|'general'
   const [npcDialog, setNpcDialog]     = useState(null)   // npc id showing dialog
@@ -1243,9 +1367,9 @@ export default function App() {
   }, [])
 
   // ── Login (two-step with password, task 7) ─────────────────────────────────
-  const handleLogin = useCallback(async (username, password, isRegister) => {
+  const handleLogin = useCallback(async (username, password, isRegister, gameMode = 'regular') => {
     try {
-      const starter = defaultProfile(username)
+      const starter = { ...defaultProfile(username), gameMode }
       let loaded    = { ...starter, username }
       let success = false
 
@@ -1256,8 +1380,7 @@ export default function App() {
             loaded = hydrateProfile({ ...starter, username })
             success = true
           } else {
-            showToast(`❌ ${result?.error || 'Registration failed'}`)
-            return
+            return result?.error || 'Registration failed. Username may already be taken.'
           }
         } else {
           const result = await apiLoginUser(username, password)
@@ -1265,8 +1388,7 @@ export default function App() {
             loaded = hydrateProfile({ ...result.profile, username })
             success = true
           } else {
-            showToast(`❌ Wrong username or password`)
-            return
+            return 'Wrong username or password.'
           }
         }
       } else {
@@ -1276,8 +1398,7 @@ export default function App() {
           loaded = local
           success = true
         } else {
-          showToast(`❌ Wrong username or password`)
-          return
+          return 'Wrong username or password.'
         }
       }
 
@@ -1289,7 +1410,7 @@ export default function App() {
         showToast(`Welcome${loaded.totalHarvested > 0 ? ' back' : ''}, ${username}! 🌸`)
       }
     } catch (err) {
-      showToast(`❌ Login error. Please try again.`)
+      return 'Login error. Please try again.'
     }
   }, [showToast])
 
@@ -1352,16 +1473,30 @@ export default function App() {
     setPlayerHp(hp => {
       const next = hp - 1
       if (next <= 0) {
-        // Respawn
-        showToast('💀 You were killed! Plants destroyed. Respawning...')
-        dayPhaseRef.current = 'day'
-        dayTimerRef.current = 0
-        setDayPhase('day')
-        setProfile(prev => prev ? ({
-          ...prev,
-          plots: Array(prev.plots.length).fill(null),
-          dayCount: (prev.dayCount || 1) + 1,
-        }) : prev)
+        if (profile?.gameMode === 'hardcore') {
+          // Hardcore: show stats screen and wipe progress
+          const days  = profile?.dayCount  || 1
+          const kills = profile?.zombieKills || 0
+          setHardcoreGameOver({ days, kills })
+          dayPhaseRef.current = 'day'
+          dayTimerRef.current = 0
+          setDayPhase('day')
+          setProfile(prev => prev ? {
+            ...defaultProfile(prev.username),
+            gameMode: 'hardcore',
+          } : prev)
+        } else {
+          // Regular: respawn, lose plants
+          showToast('💀 You were killed! Plants destroyed. Respawning...')
+          dayPhaseRef.current = 'day'
+          dayTimerRef.current = 0
+          setDayPhase('day')
+          setProfile(prev => prev ? ({
+            ...prev,
+            plots: Array(prev.plots.length).fill(null),
+            dayCount: (prev.dayCount || 1) + 1,
+          }) : prev)
+        }
         return 10
       }
       return next
@@ -1443,6 +1578,18 @@ export default function App() {
     })
   }, [showToast])
 
+  const handleBuyFertUpgrade = useCallback(() => {
+    setProfile(prev => {
+      if (!prev) return prev
+      const tier = prev.fertilizerTier || 0
+      const upgrade = FERTILIZER_UPGRADES[tier]
+      if (!upgrade) { showToast('Fertilizer already at max level! 👑'); return prev }
+      if (prev.petals < upgrade.cost) { showToast('Not enough petals! 🌸'); return prev }
+      showToast(`${upgrade.emoji} ${upgrade.name} unlocked! Plants grow ${upgrade.speedMult}× faster!`)
+      return { ...prev, petals: prev.petals - upgrade.cost, fertilizerTier: tier + 1 }
+    })
+  }, [showToast])
+
   const handleTreeChopped = useCallback((baseReward) => {
     setProfile(prev => {
       if (!prev) return prev
@@ -1498,7 +1645,8 @@ export default function App() {
         if (!isUnlocked) { showToast(`Unlock ${p.name} in the shop first! 🔒`); return prev }
         if (p.seedCost > 0 && owned === 0) { showToast(`No ${p.name} seeds! Buy from the shop.`); return prev }
 
-        const speedMult = (prev.hasFertilizer ? 0.5 : 1) * ((prev.houseLevel || 0) >= 1 ? 0.9 : 1)
+        const permSpeedMult = FERTILIZER_UPGRADES[Math.max(0, (prev.fertilizerTier || 1) - 1)]?.speedMult || 1
+        const speedMult = (prev.hasFertilizer ? 0.5 : 1) * ((prev.houseLevel || 0) >= 1 ? 0.9 : 1) / (prev.fertilizerTier > 0 ? permSpeedMult : 1)
         const totalGrowTime = p.growTime * speedMult
         const newPlots = [...prev.plots]
         newPlots[index] = { seedId: selectedSeed, state: 'growing', elapsed: 0, totalGrowTime, savedAt: Date.now() }
@@ -1584,9 +1732,9 @@ export default function App() {
       const newPlots = prev.plots.map(plot => {
         if (!plot || plot.state !== 'growing') return plot
         const elapsed     = (plot.elapsed || 0) + (now - (plot.savedAt || now))
-        const remaining   = plot.totalGrowTime - elapsed
+        const remaining   = Math.max(0, plot.totalGrowTime - elapsed)
         const newTotal    = elapsed + remaining * 0.5   // halve the remaining time
-        return { ...plot, elapsed: 0, totalGrowTime: newTotal, savedAt: now }
+        return { ...plot, elapsed, totalGrowTime: newTotal, savedAt: now }
       })
       showToast('🚀 2× growth boost applied to all growing plants!')
       return { ...prev, plots: newPlots, lastAdTime: now }
@@ -1666,10 +1814,19 @@ export default function App() {
         {showLogin && <LoginOverlay onLogin={handleLogin} />}
       </AnimatePresence>
       <AnimatePresence>
+        {hardcoreGameOver && (
+          <HardcoreGameOverScreen
+            days={hardcoreGameOver.days}
+            kills={hardcoreGameOver.kills}
+            onDismiss={() => setHardcoreGameOver(null)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
         {showShop && (
           <ShopPanel profile={profile}
             onBuySeed={handleBuySeed} onUnlock={handleUnlock}
-            onBuyItem={handleBuyItem} onClose={() => setShowShop(false)} />
+            onBuyItem={handleBuyItem} onBuyFertUpgrade={handleBuyFertUpgrade} onClose={() => setShowShop(false)} />
         )}
       </AnimatePresence>
       <AnimatePresence>
@@ -1732,7 +1889,7 @@ export default function App() {
         {castleShop === 'general' && (
           <ShopPanel profile={profile}
             onBuySeed={handleBuySeed} onUnlock={handleUnlock}
-            onBuyItem={handleBuyItem} onClose={() => setCastleShop(null)} />
+            onBuyItem={handleBuyItem} onBuyFertUpgrade={handleBuyFertUpgrade} onClose={() => setCastleShop(null)} />
         )}
       </AnimatePresence>
       <AnimatePresence>
