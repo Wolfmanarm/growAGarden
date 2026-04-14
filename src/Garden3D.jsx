@@ -937,7 +937,7 @@ function ProgressBar3D({ progress }) {
   )
 }
 
-function GardenPlot({ index, plot, onPlotClick, totalCols }) {
+function GardenPlot({ index, plot, onPlotClick, totalCols, highlighted }) {
   const col = index % totalCols
   const row = Math.floor(index / totalCols)
   const x   = (col - 2) * PLOT_SPACING
@@ -977,6 +977,12 @@ function GardenPlot({ index, plot, onPlotClick, totalCols }) {
       {plot&&<PlantModel seedId={plot.seedId} progress={progress} isReady={isReady} onClick={handleClick}/>}
       {isReady&&<ReadySparkle/>}
       {plot&&!isReady&&<ProgressBar3D progress={progress}/>}
+      {highlighted && (
+        <mesh position={[0, 0.09, 0]} rotation={[-Math.PI/2, 0, 0]}>
+          <ringGeometry args={[0.78, 0.95, 32]}/>
+          <meshBasicMaterial color="#4ade80" transparent opacity={0.75}/>
+        </mesh>
+      )}
     </group>
   )
 }
@@ -1518,7 +1524,7 @@ const GATE_MAX_HP = 60
 function CastleCity({ gateHp = GATE_MAX_HP }) {
   const wallColor = '#78716c'
   const wallH     = 2.2
-  const wallW     = 0.6
+  const wallW     = 1.5
   const gateAlive = gateHp > 0
   const gatePct   = gateHp / GATE_MAX_HP
 
@@ -1793,6 +1799,78 @@ function getArcherStats(castleUpgrades) {
 
 const TOWER_POSITIONS = [[-8, 14.5], [8, 14.5]]
 
+// ─── Castle wall constants (shared by player + zombie collision) ─────────────
+const CASTLE_WALL_Z_FRONT = 13.0
+const CASTLE_WALL_Z_BACK  = 31.5
+const CASTLE_WALL_X_LEFT  = -12.0
+const CASTLE_WALL_X_RIGHT =  12.0
+const CASTLE_GATE_X_MIN   = -2.5
+const CASTLE_GATE_X_MAX   =  2.5
+const CASTLE_WALL_H       =  2.2
+const CASTLE_WALL_T       =  0.4   // half-thickness + player radius buffer
+
+// ─── Ramp constants ───────────────────────────────────────────────────────────
+const RAMP_X_MIN = 10.0, RAMP_X_MAX = 12.2   // along right interior wall
+const RAMP_Z_MIN = 15.0, RAMP_Z_MAX = 20.5   // runs north along wall
+
+// Returns the ground/surface Y at world position (px, pz).
+// currentY is passed so wall tops only stay elevated when player is already up there.
+function getGroundY(px, pz, currentY = 0) {
+  // Ramp: always provides elevation — this is the only way up
+  if (px >= RAMP_X_MIN && px <= RAMP_X_MAX && pz >= RAMP_Z_MIN && pz <= RAMP_Z_MAX) {
+    const t = (pz - RAMP_Z_MIN) / (RAMP_Z_MAX - RAMP_Z_MIN)
+    return t * CASTLE_WALL_H
+  }
+  // Wall tops — only count if the player is already at wall height
+  if (currentY < CASTLE_WALL_H - 0.4) return 0
+  const W = 0.75
+  if (Math.abs(px - CASTLE_WALL_X_RIGHT) <= W && pz >= CASTLE_WALL_Z_FRONT && pz <= CASTLE_WALL_Z_BACK) return CASTLE_WALL_H
+  if (Math.abs(px - CASTLE_WALL_X_LEFT)  <= W && pz >= CASTLE_WALL_Z_FRONT && pz <= CASTLE_WALL_Z_BACK) return CASTLE_WALL_H
+  if (Math.abs(pz - CASTLE_WALL_Z_BACK)  <= W && px >= CASTLE_WALL_X_LEFT  && px <= CASTLE_WALL_X_RIGHT) return CASTLE_WALL_H
+  if (Math.abs(pz - CASTLE_WALL_Z_FRONT) <= W && px >= CASTLE_WALL_X_LEFT  && px <= CASTLE_WALL_X_RIGHT) return CASTLE_WALL_H
+  return 0
+}
+
+// ─── Castle ramp visual ───────────────────────────────────────────────────────
+function CastleRamp() {
+  const rampLen      = RAMP_Z_MAX - RAMP_Z_MIN           // 5.5 horizontal units
+  const surfaceLen   = Math.sqrt(rampLen ** 2 + CASTLE_WALL_H ** 2)
+  const angle        = Math.atan2(CASTLE_WALL_H, rampLen) // slope angle
+  const cx           = (RAMP_X_MIN + RAMP_X_MAX) / 2
+  const cz           = (RAMP_Z_MIN + RAMP_Z_MAX) / 2
+  const cy           = CASTLE_WALL_H / 2
+  const rampW        = RAMP_X_MAX - RAMP_X_MIN
+  const stoneColor   = '#78716c'
+  const stepCount    = 6
+
+  return (
+    <group>
+      {/* Ramp surface */}
+      <mesh position={[cx, cy, cz]} rotation={[-angle, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[rampW, 0.18, surfaceLen]}/>
+        <meshLambertMaterial color={stoneColor}/>
+      </mesh>
+      {/* Step markings on ramp */}
+      {Array.from({length: stepCount}).map((_, i) => {
+        const t  = (i + 0.5) / stepCount
+        const sz = RAMP_Z_MIN + t * rampLen
+        const sy = t * CASTLE_WALL_H
+        return (
+          <mesh key={i} position={[cx, sy + 0.1, sz]} rotation={[-angle, 0, 0]}>
+            <boxGeometry args={[rampW, 0.04, 0.12]}/>
+            <meshLambertMaterial color="#57534e"/>
+          </mesh>
+        )
+      })}
+      {/* Left side support */}
+      <mesh position={[RAMP_X_MIN + 0.1, cy, cz]} rotation={[-angle, 0, 0]} castShadow>
+        <boxGeometry args={[0.2, 0.5, surfaceLen]}/>
+        <meshLambertMaterial color="#57534e"/>
+      </mesh>
+    </group>
+  )
+}
+
 // ─── Camera + movement ────────────────────────────────────────────────────────
 const _camTarget    = new THREE.Vector3()
 const _lookAt       = new THREE.Vector3()
@@ -1808,9 +1886,15 @@ const PLAYER_R   = 0.4
 
 function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEnter,
                      dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep,
-                     attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward }) {
+                     attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward,
+                     respawnSignal, onMessage, shopOpen }) {
   const playerRef    = useRef()
   const playerPos    = useRef(new THREE.Vector3(0, 0, 6))
+  const [nearestPlotIdx, setNearestPlotIdx] = useState(-1)
+  const nearestPlotIdxRef = useRef(-1)
+  const smoothCamYRef  = useRef(5.5)   // damped camera height
+  const bowCoolRef     = useRef(0)     // timestamp of last bow shot
+  const swordCoolRef   = useRef(0)     // timestamp of last sword hit
   const playerRot    = useRef(Math.PI)
   const jumpVel      = useRef(0)
   const keys         = useRef({})
@@ -1826,11 +1910,13 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   const weaponRangeRef    = useRef(weaponRange)
   const equipSourceRef    = useRef(equipSource)
   const castleUpgradesRef = useRef(profile?.castleUpgrades || {})
+  const shopOpenRef       = useRef(shopOpen)
   useEffect(() => { dayPhaseRef.current = dayPhase },               [dayPhase])
   useEffect(() => { attackDmgRef.current = attackDamage },          [attackDamage])
   useEffect(() => { weaponRangeRef.current = weaponRange },         [weaponRange])
   useEffect(() => { equipSourceRef.current = equipSource },         [equipSource])
   useEffect(() => { castleUpgradesRef.current = profile?.castleUpgrades || {} }, [profile?.castleUpgrades])
+  useEffect(() => { shopOpenRef.current = shopOpen },               [shopOpen])
 
   // Arrow projectile system — meshMapRef lets us update positions directly (no per-frame setState)
   const arrowsRef     = useRef([])
@@ -1885,6 +1971,15 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   // NPC proximity tracking
   const nearNpcRef = useRef(null)
 
+  // Respawn: teleport player to house and wipe all zombies
+  useEffect(() => {
+    if (!respawnSignal) return
+    playerPos.current.set(-8, 0, 3)
+    if (playerRef.current) playerRef.current.position.copy(playerPos.current)
+    zombiesRef.current.forEach(z => { z.hp = 0 })
+    setZombieHps({})
+  }, [respawnSignal])
+
   useEffect(() => {
     const down = e => { keys.current[e.code] = true }
     const up   = e => { keys.current[e.code] = false }
@@ -1903,9 +1998,14 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   const inFarm = (x, z) =>
     x > FARM_MIN_X && x < FARM_MAX_X && z > FARM_MIN_Z && z < FARM_MAX_Z
 
-  // Day-start: ensure minimum daytime wanderers (keep survivors, top up if needed)
+  // Day-start: kill all night zombies immediately, then spawn fresh daytime wanderers
   useEffect(() => {
     if (dayPhase !== 'day') return
+    if (profile?.gameMode === 'peaceful') return
+    // Task 2: all zombies disappear at dawn
+    zombiesRef.current.forEach(z => { z.hp = 0 })
+    zombiesRef.current = []
+    setZombieHps({})
     const dayCount = profile?.dayCount || 1
     const minWanderers = Math.min(dayCount + 3, ALL_SPAWN_POS.length)
     const validSpawns  = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
@@ -1938,6 +2038,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   // Night-start: spawn ever-increasing horde on top of surviving wanderers
   useEffect(() => {
     if (dayPhase !== 'night') return
+    if (profile?.gameMode === 'peaceful') return
     const dayCount  = profile?.dayCount || 1
     const batchSize = dayCount * 3 + 5
     const validSpawns = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
@@ -2006,6 +2107,42 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     onPlotClick(index)
   }, [onPlotClick, totalCols])
 
+  // Click-to-shoot bow: fire arrow toward clicked world position / zombie
+  const handleBowClick = useCallback((event) => {
+    if (weaponRangeRef.current <= 0) return   // only with ranged weapon
+    if (Date.now() - bowCoolRef.current < 1000) return  // 1s cooldown
+    event.stopPropagation()
+    const wx = event.point.x
+    const wz = event.point.z
+    const px = playerPos.current.x
+    const pz = playerPos.current.z
+
+    // Prefer targeting the closest zombie within 2.5 units of the click
+    let tx = wx, tz = wz
+    let nearest = Infinity
+    for (const z of zombiesRef.current) {
+      if (z.hp <= 0) continue
+      const d = Math.sqrt((wx - z.x) ** 2 + (wz - z.z) ** 2)
+      if (d < 2.5 && d < nearest) { nearest = d; tx = z.x; tz = z.z }
+    }
+
+    const adx = tx - px, adz = tz - pz
+    const dist = Math.sqrt(adx * adx + adz * adz)
+    if (dist < 0.5) return
+
+    const BOW_MAX_DIST = 10 * PLOT_SPACING  // task 7: cap to 10 plot lengths
+    bowCoolRef.current = Date.now()
+    arrowsRef.current.push({
+      id: nextArrowId.current++,
+      x: px, y: 1.1, z: pz,
+      dx: adx / dist, dz: adz / dist,
+      remainingDist: Math.min(dist + 4, BOW_MAX_DIST),
+      damage: attackDmgRef.current || 1,
+    })
+    setArrowRenders([...arrowsRef.current])
+    swingRef.current = 1
+  }, [])
+
   useFrame(({ camera, clock }, delta) => {
     const isNight = dayPhaseRef.current === 'night'
 
@@ -2029,21 +2166,27 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     if (back) moveDir -= 1
     movingRef.current = moveDir !== 0
 
-    if (keys.current['Space'] && playerPos.current.y <= 0.01) {
+    // Jump from current surface level
+    const currentGroundY = getGroundY(playerPos.current.x, playerPos.current.z, playerPos.current.y)
+    if (keys.current['Space'] && playerPos.current.y <= currentGroundY + 0.05) {
       jumpVel.current = 6.0
       keys.current['Space'] = false
     }
-    jumpVel.current    -= 18 * delta
-    playerPos.current.y = Math.max(0, playerPos.current.y + jumpVel.current * delta)
-    if (playerPos.current.y <= 0) jumpVel.current = 0
+    jumpVel.current -= 18 * delta
+    const nextY      = playerPos.current.y + jumpVel.current * delta
+    const targetGndY = getGroundY(playerPos.current.x, playerPos.current.z, playerPos.current.y)
+    playerPos.current.y = Math.max(targetGndY, nextY)
+    if (playerPos.current.y <= targetGndY) jumpVel.current = 0
 
     if (moveDir !== 0) {
       const r    = playerRot.current
-      const newX = playerPos.current.x + Math.sin(r) * moveDir * MOVE_SPEED * delta
-      const newZ = playerPos.current.z + Math.cos(r) * moveDir * MOVE_SPEED * delta
+      let newX   = playerPos.current.x + Math.sin(r) * moveDir * MOVE_SPEED * delta
+      let newZ   = playerPos.current.z + Math.cos(r) * moveDir * MOVE_SPEED * delta
 
-      // Compute east boundary dynamically based on farm size
-      const eastBound = (totalColsRef.current - 3) * PLOT_SPACING + 4
+      // Extended world bounds (task 3: 4× the previous east/west limit)
+      const farmEastBound = (totalColsRef.current - 3) * PLOT_SPACING + 4
+      newX = Math.max(-60, Math.min(Math.max(farmEastBound, 60), newX))
+      newZ = Math.max(-60, Math.min(60, newZ))
 
       // House collision
       const inX = newX + PLAYER_R > HOUSE_AABB.minX && newX - PLAYER_R < HOUSE_AABB.maxX
@@ -2052,25 +2195,77 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
         const wasInX = playerPos.current.x + PLAYER_R > HOUSE_AABB.minX && playerPos.current.x - PLAYER_R < HOUSE_AABB.maxX
         const wasInZ = playerPos.current.z + PLAYER_R > HOUSE_AABB.minZ && playerPos.current.z - PLAYER_R < HOUSE_AABB.maxZ
         if (!wasInX) {
-          playerPos.current.z = Math.max(-35, Math.min(35, newZ))
+          playerPos.current.z = newZ
         } else if (!wasInZ) {
-          playerPos.current.x = Math.max(-16, Math.min(eastBound, newX))
+          playerPos.current.x = newX
         }
       } else {
-        // Castle walls — only allow passage through gate opening
-        const inCastle = newZ > 13  // Try to enter castle grounds
-        const inGateX   = newX > -2.5 && newX < 2.5  // Gate opening
-        const atGateZ   = Math.abs(newZ - 13) < 2  // Near gate threshold
+        // Castle wall collision — directional checks block from both sides
+        const gateOpen = gateHpRef.current <= 0
+        const onWallTop = playerPos.current.y > CASTLE_WALL_H - 0.3
 
-        // Block entry if not aligned with gate
-        if (inCastle && !inGateX && atGateZ) {
-          // At north wall but not in gate — block movement
-          playerPos.current.x = Math.max(-16, Math.min(eastBound, playerPos.current.x))
-          playerPos.current.z = 12.5  // Push back outside
-        } else {
-          playerPos.current.x = Math.max(-16, Math.min(eastBound, newX))
-          playerPos.current.z = Math.max(-35, Math.min(35, newZ))
+        if (!onWallTop) {
+          const ox = playerPos.current.x
+          const oz = playerPos.current.z
+
+          // Front wall (Z = CASTLE_WALL_Z_FRONT) — gate exempt
+          if (!gateOpen) {
+            const inGate = newX > CASTLE_GATE_X_MIN && newX < CASTLE_GATE_X_MAX
+            if (!inGate) {
+              if (oz < CASTLE_WALL_Z_FRONT && newZ >= CASTLE_WALL_Z_FRONT) newZ = CASTLE_WALL_Z_FRONT - 0.01
+              if (oz > CASTLE_WALL_Z_FRONT && newZ <= CASTLE_WALL_Z_FRONT) newZ = CASTLE_WALL_Z_FRONT + 0.01
+            }
+          }
+
+          // Back wall (Z = CASTLE_WALL_Z_BACK)
+          if (newX > CASTLE_WALL_X_LEFT && newX < CASTLE_WALL_X_RIGHT) {
+            if (oz < CASTLE_WALL_Z_BACK && newZ >= CASTLE_WALL_Z_BACK) newZ = CASTLE_WALL_Z_BACK - 0.01
+            if (oz > CASTLE_WALL_Z_BACK && newZ <= CASTLE_WALL_Z_BACK) newZ = CASTLE_WALL_Z_BACK + 0.01
+          }
+
+          // Left wall (X = CASTLE_WALL_X_LEFT) — blocks within wall Z range
+          if (newZ > CASTLE_WALL_Z_FRONT && newZ < CASTLE_WALL_Z_BACK) {
+            if (ox > CASTLE_WALL_X_LEFT && newX <= CASTLE_WALL_X_LEFT) newX = CASTLE_WALL_X_LEFT + 0.01
+            if (ox < CASTLE_WALL_X_LEFT && newX >= CASTLE_WALL_X_LEFT) newX = CASTLE_WALL_X_LEFT - 0.01
+          }
+
+          // Right wall (X = CASTLE_WALL_X_RIGHT) — ramp zone exempt
+          const inRampZone = newZ >= RAMP_Z_MIN && newZ <= RAMP_Z_MAX
+          if (newZ > CASTLE_WALL_Z_FRONT && newZ < CASTLE_WALL_Z_BACK && !inRampZone) {
+            if (ox < CASTLE_WALL_X_RIGHT && newX >= CASTLE_WALL_X_RIGHT) newX = CASTLE_WALL_X_RIGHT - 0.01
+            if (ox > CASTLE_WALL_X_RIGHT && newX <= CASTLE_WALL_X_RIGHT) newX = CASTLE_WALL_X_RIGHT + 0.01
+          }
         }
+
+        playerPos.current.x = newX
+        playerPos.current.z = newZ
+      }
+
+      // Update Y for new XZ position (ramp / wall tops)
+      const newGroundY = getGroundY(playerPos.current.x, playerPos.current.z, playerPos.current.y)
+      if (newGroundY > playerPos.current.y - 0.1) {
+        playerPos.current.y = Math.max(playerPos.current.y, newGroundY)
+        if (playerPos.current.y <= newGroundY + 0.05) jumpVel.current = 0
+      }
+    }
+
+    // Track nearest interactive plot in front of player
+    {
+      const r   = playerRot.current
+      const fpx = playerPos.current.x + Math.sin(r) * PLOT_SPACING
+      const fpz = playerPos.current.z + Math.cos(r) * PLOT_SPACING
+      let newNearest = -1, bestD = REACH
+      for (let i = 0; i < 5 * totalColsRef.current; i++) {
+        const col   = i % totalColsRef.current
+        const row   = Math.floor(i / totalColsRef.current)
+        const plotX = (col - 2) * PLOT_SPACING
+        const plotZ = (row - 2) * PLOT_SPACING
+        const d     = Math.sqrt((fpx - plotX) ** 2 + (fpz - plotZ) ** 2)
+        if (d < bestD) { bestD = d; newNearest = i }
+      }
+      if (newNearest !== nearestPlotIdxRef.current) {
+        nearestPlotIdxRef.current = newNearest
+        setNearestPlotIdx(newNearest)
       }
     }
 
@@ -2084,7 +2279,8 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     const now = Date.now()
 
     // ── Zombie trickle spawn during night (scales with day count) ────────────
-    if (isNight) {
+    const isPeaceful = profile?.gameMode === 'peaceful'
+    if (isNight && !isPeaceful) {
       spawnTimerRef.current += delta
       const dayCount      = dayCountRef.current
       const nightProgress = Math.min(spawnTimerRef.current / NIGHT_SECONDS, 1)
@@ -2125,11 +2321,15 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       const dz   = pz - z.z
       const dist = Math.sqrt(dx * dx + dz * dz)
 
+      if (isPeaceful) continue   // peaceful mode — no zombie behaviour
+
       if (isNight) {
         // If gate is intact, block zombies from entering castle unless gate is broken
         const gateIntact = gateHpRef.current > 0
         const approachingGate = z.z > 10 && z.z < 14 && Math.abs(z.x) < 3.5
-        if (gateIntact && approachingGate) {
+        // Task 1: leave gate attack if player re-enters attack range
+        const playerIsClose = dist < 12
+        if (gateIntact && approachingGate && !playerIsClose) {
           if (now - gateHitRef.current > 2000) {
             gateHitRef.current = now
             const newGateHp = Math.max(0, gateHpRef.current - 1)
@@ -2140,6 +2340,19 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
           // Night: chase player
           z.x += (dx / dist) * ZOMBIE_SPEED * delta
           z.z += (dz / dist) * ZOMBIE_SPEED * delta
+        }
+
+        // Wall collision for night zombies — prevent crossing castle walls
+        if (gateHpRef.current > 0) {
+          const throughGate = Math.abs(z.x) < CASTLE_GATE_X_MAX + 0.3
+          if (!throughGate && z.z > CASTLE_WALL_Z_FRONT - 0.5) {
+            z.z = CASTLE_WALL_Z_FRONT - 0.5
+          }
+        }
+        // Side and back wall clamps (even with open gate, keep within exterior)
+        // Task 7: extended x-range to match expanded farm size
+        if (z.z < CASTLE_WALL_Z_FRONT) {
+          z.x = Math.max(-60, Math.min(60, z.x))
         }
       } else {
         // Day: zombies wander in wilderness; attack player if they enter wilderness
@@ -2318,34 +2531,40 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     // ── E key priority chain ──────────────────────────────────────────────────
     if (keys.current['KeyE']) {
       keys.current['KeyE'] = false
+      // Task 5: if a shop/dialog is open, let App.jsx handle the close — don't fire in-game action
+      if (shopOpenRef.current) return
+      const r    = playerRot.current
+      const mode = equipSourceRef.current  // 'sword' | 'bow' | 'axe' | 'seeds'
 
       if (isNight && near) {
-        // 1. Sleep through night
-        onSleep?.()
+        // 1. Sleep through night — only if all zombies are cleared (task 4)
+        const zombiesAlive = zombiesRef.current.filter(z => z.hp > 0).length
+        if (zombiesAlive === 0) {
+          onSleep?.()
+        } else {
+          onMessage?.(`⚔️ Kill all ${zombiesAlive} zombie${zombiesAlive > 1 ? 's' : ''} first!`)
+        }
       } else if (nearNpcRef.current) {
         // 2. Talk to NPC
         onTalkToNpc?.(nearNpcRef.current)
-      } else {
-        // 3. Try to attack a zombie in front
-        const r     = playerRot.current
-        const isBow = weaponRangeRef.current > 0
-        let zombieHit = false
-
-        if (isBow) {
-          // Bow: fire arrow projectile (10 plot-spaces max range)
-          const bowMaxDist = 10 * PLOT_SPACING
+      } else if (mode === 'bow' && weaponRangeRef.current > 0) {
+        // 3a. Bow mode — fire forward arrow with cooldown
+        if (Date.now() - bowCoolRef.current >= 1000) {
+          bowCoolRef.current = Date.now()
+          const BOW_MAX_DIST = 10 * PLOT_SPACING
           arrowsRef.current.push({
             id: nextArrowId.current++,
             x: px + Math.sin(r) * 0.6, y: 1.1, z: pz + Math.cos(r) * 0.6,
             dx: Math.sin(r), dz: Math.cos(r),
-            remainingDist: bowMaxDist,
+            remainingDist: BOW_MAX_DIST,
             damage: attackDmgRef.current || 1,
           })
           setArrowRenders([...arrowsRef.current])
           swingRef.current = 1
-          zombieHit = true   // prevent melee fallthrough
-        } else {
-          // Melee: instant hit — range is 1 plot distance
+        }
+      } else if (mode === 'sword' || (mode !== 'axe' && mode !== 'seeds' && weaponRangeRef.current === 0)) {
+        // 3b. Sword / melee mode with cooldown (2 attacks/sec)
+        if (Date.now() - swordCoolRef.current >= 500) {
           const atkDist = PLOT_SPACING
           const atkX    = px + Math.sin(r) * atkDist
           const atkZ    = pz + Math.cos(r) * atkDist
@@ -2353,57 +2572,52 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
             if (z.hp <= 0) continue
             const d = Math.sqrt((atkX - z.x) ** 2 + (atkZ - z.z) ** 2)
             if (d < PLOT_SPACING) {
+              swordCoolRef.current = Date.now()
               const wasAlive = z.hp > 0
               z.hp = Math.max(0, z.hp - (attackDmgRef.current || 1))
-              // Update HP bar via ref
               const hpFill = zombieHpBarMap.current.get(z.id)
               if (hpFill) { const f = z.hp/10; hpFill.scale.x = Math.max(0.001,f); hpFill.position.x = -0.35*(1-Math.max(0.001,f)) }
-              zombieHit = true
+              swingRef.current = 1
               if (wasAlive && z.hp <= 0) { hpUpdates[z.id] = 0; hpChanged = true; onPlayerDamaged?.({ killed: true }) }
               break
             }
           }
         }
-        if (!zombieHit) {
-          // Check if near a tree to chop
-          const TREE_REACH = 2.8
-          let treeChopped = false
-          if (chopDmgRef.current > 0 && Date.now() - chopCoolRef.current > 600) {
-            for (let tid = 0; tid < TREE_POSITIONS.length; tid++) {
-              if (choppedRef.current.has(tid)) continue
-              const [tx, tz] = TREE_POSITIONS[tid]
-              const td = Math.sqrt((px - tx) ** 2 + (pz - tz) ** 2)
-              if (td < TREE_REACH) {
-                chopCoolRef.current = Date.now()
-                swingRef.current = 1
-                const prevHp = treeHpsRef.current[tid] ?? TREE_MAX_HP
-                const newHp  = Math.max(0, prevHp - chopDmgRef.current)
-                treeHpsRef.current[tid] = newHp
-                setTreeHps(prev => ({ ...prev, [tid]: newHp }))
-                if (newHp <= 0) {
-                  choppedRef.current = new Set([...choppedRef.current, tid])
-                  setChoppedTrees(new Set(choppedRef.current))
-                  onTreeChopped?.(treeBaseReward)
-                }
-                treeChopped = true
-                break
+      } else if (mode === 'axe') {
+        // 3c. Axe mode — chop trees
+        const TREE_REACH = 2.8
+        if (chopDmgRef.current > 0 && Date.now() - chopCoolRef.current > 600) {
+          for (let tid = 0; tid < TREE_POSITIONS.length; tid++) {
+            if (choppedRef.current.has(tid)) continue
+            const [tx, tz] = TREE_POSITIONS[tid]
+            const td = Math.sqrt((px - tx) ** 2 + (pz - tz) ** 2)
+            if (td < TREE_REACH) {
+              chopCoolRef.current = Date.now()
+              swingRef.current = 1
+              const prevHp = treeHpsRef.current[tid] ?? TREE_MAX_HP
+              const newHp  = Math.max(0, prevHp - chopDmgRef.current)
+              treeHpsRef.current[tid] = newHp
+              setTreeHps(prev => ({ ...prev, [tid]: newHp }))
+              if (newHp <= 0) {
+                choppedRef.current = new Set([...choppedRef.current, tid])
+                setChoppedTrees(new Set(choppedRef.current))
+                onTreeChopped?.(treeBaseReward)
               }
+              break
             }
           }
-          if (!treeChopped) {
-            if (near) {
-              // 4. Enter house (day)
-              onHouseEnter?.()
-            } else {
-              // 5. Interact with front plot
-              const fpx = px + Math.sin(r) * PLOT_SPACING
-              const fpz = pz + Math.cos(r) * PLOT_SPACING
-              const idx = findPlotAtPos(fpx, fpz)
-              if (idx >= 0) {
-                swingRef.current = 1
-                onPlotClick(idx)
-              }
-            }
+        }
+      } else {
+        // 3d. Seeds mode (or no weapon) — enter house or plant
+        if (near) {
+          onHouseEnter?.()
+        } else {
+          const fpx = px + Math.sin(r) * PLOT_SPACING
+          const fpz = pz + Math.cos(r) * PLOT_SPACING
+          const idx = findPlotAtPos(fpx, fpz)
+          if (idx >= 0) {
+            swingRef.current = 1
+            onPlotClick(idx)
           }
         }
       }
@@ -2427,7 +2641,8 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 
     // ── Third-person camera ───────────────────────────────────────────────────
     const a = playerRot.current
-    _camTarget.set(px - Math.sin(a) * 7, playerPos.current.y + 5.5, pz - Math.cos(a) * 7)
+    smoothCamYRef.current += (playerPos.current.y + 5.5 - smoothCamYRef.current) * 0.05
+    _camTarget.set(px - Math.sin(a) * 7, smoothCamYRef.current, pz - Math.cos(a) * 7)
     camera.position.lerp(_camTarget, 0.07)
     _lookAt.set(px, playerPos.current.y + 1.4, pz)
     camera.lookAt(_lookAt)
@@ -2449,12 +2664,19 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       <color attach="background" args={[skyColor]}/>
       <fog attach="fog" args={[fogColor, 30, 60]}/>
 
+      {/* Invisible ground plane for bow click-to-shoot */}
+      <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, 0.02, 0]} onClick={handleBowClick}>
+        <planeGeometry args={[200, 200]}/>
+        <meshBasicMaterial transparent opacity={0} depthWrite={false}/>
+      </mesh>
+
       <Ground/>
       <Clouds/>
       <Fence totalCols={totalCols}/>
       <House3D onEnter={onHouseEnter} houseLevel={profile?.houseLevel || 0}/>
       <Wilderness treeHps={treeHps} choppedTrees={choppedTrees}/>
       <CastleCity gateHp={gateHp}/>
+      <CastleRamp/>
 
       {/* Archer watch towers (only when archers upgrade is owned) */}
       {profile?.castleUpgrades?.archers && TOWER_POSITIONS.map(([tx, tz], i) => (
@@ -2462,7 +2684,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       ))}
 
       {Array.from({length: 5 * totalCols}).map((_,i) => (
-        <GardenPlot key={i} index={i} plot={plots[i]??null} onPlotClick={handlePlotClick} totalCols={totalCols}/>
+        <GardenPlot key={i} index={i} plot={plots[i]??null} onPlotClick={handlePlotClick} totalCols={totalCols} highlighted={i === nearestPlotIdx}/>
       ))}
 
       {zombiesRef.current.map(z => (
@@ -2485,14 +2707,16 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 // ─── Export ───────────────────────────────────────────────────────────────────
 export default function Garden3D({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEnter,
                                    dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep,
-                                   attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward }) {
+                                   attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward,
+                                   respawnSignal, onMessage, shopOpen }) {
   return (
     <Canvas shadows camera={{position:[0,8,13],fov:55}} style={{width:'100%',height:'100%',display:'block'}}>
       <GameScene plots={plots} onPlotClick={onPlotClick} profile={profile}
         outfit={outfit} onNearHouse={onNearHouse} onHouseEnter={onHouseEnter}
         dayPhase={dayPhase} onPlayerDamaged={onPlayerDamaged} onTalkToNpc={onTalkToNpc}
         onNearNpc={onNearNpc} onSleep={onSleep} attackDamage={attackDamage} weaponRange={weaponRange}
-        equipSource={equipSource} chopDamage={chopDamage} onTreeChopped={onTreeChopped} treeBaseReward={treeBaseReward}/>
+        equipSource={equipSource} chopDamage={chopDamage} onTreeChopped={onTreeChopped} treeBaseReward={treeBaseReward}
+        respawnSignal={respawnSignal} onMessage={onMessage} shopOpen={shopOpen}/>
     </Canvas>
   )
 }

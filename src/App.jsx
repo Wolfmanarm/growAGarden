@@ -41,22 +41,38 @@ const WARDROBE = {
     { id: 'shirt_green',   name: 'Green Shirt',   color: '#4ade80', cost: 50  },
     { id: 'shirt_blue',    name: 'Blue Shirt',    color: '#60a5fa', cost: 50  },
     { id: 'shirt_red',     name: 'Red Shirt',     color: '#f87171', cost: 50  },
+    { id: 'shirt_teal',    name: 'Teal Shirt',    color: '#2dd4bf', cost: 50  },
+    { id: 'shirt_orange',  name: 'Orange Shirt',  color: '#f97316', cost: 50  },
+    { id: 'shirt_pink',    name: 'Pink Shirt',    color: '#ec4899', cost: 75  },
     { id: 'shirt_purple',  name: 'Purple Shirt',  color: '#c084fc', cost: 100 },
+    { id: 'shirt_lime',    name: 'Lime Shirt',    color: '#84cc16', cost: 100 },
+    { id: 'shirt_navy',    name: 'Navy Shirt',    color: '#1e3a8a', cost: 150 },
+    { id: 'shirt_black',   name: 'Black Shirt',   color: '#111827', cost: 150 },
     { id: 'shirt_gold',    name: 'Gold Shirt',    color: '#fbbf24', cost: 200 },
   ],
   pants: [
     { id: 'pants_default', name: 'Brown Pants',   color: '#92400e', cost: 0   },
     { id: 'pants_blue',    name: 'Blue Jeans',    color: '#1d4ed8', cost: 50  },
     { id: 'pants_black',   name: 'Black Pants',   color: '#1f2937', cost: 50  },
+    { id: 'pants_gray',    name: 'Gray Pants',    color: '#6b7280', cost: 50  },
+    { id: 'pants_khaki',   name: 'Khaki Pants',   color: '#c2a97a', cost: 75  },
+    { id: 'pants_red',     name: 'Red Pants',     color: '#dc2626', cost: 75  },
     { id: 'pants_green',   name: 'Green Pants',   color: '#166534', cost: 100 },
+    { id: 'pants_teal',    name: 'Teal Pants',    color: '#0d9488', cost: 100 },
     { id: 'pants_purple',  name: 'Purple Pants',  color: '#7e22ce', cost: 100 },
+    { id: 'pants_white',   name: 'White Pants',   color: '#f9fafb', cost: 150 },
   ],
   hats: [
     { id: 'hat_none',      name: 'No Hat',        hatColor: null,      hatBrim: false, cost: 0   },
     { id: 'hat_straw',     name: 'Straw Hat',     hatColor: '#d97706', hatBrim: true,  cost: 75  },
     { id: 'hat_blue',      name: 'Blue Cap',      hatColor: '#2563eb', hatBrim: false, cost: 75  },
     { id: 'hat_red',       name: 'Red Cap',       hatColor: '#dc2626', hatBrim: false, cost: 75  },
+    { id: 'hat_pink',      name: 'Pink Cap',      hatColor: '#ec4899', hatBrim: false, cost: 75  },
+    { id: 'hat_green',     name: 'Green Cap',     hatColor: '#16a34a', hatBrim: false, cost: 75  },
+    { id: 'hat_hard',      name: 'Hard Hat',      hatColor: '#fbbf24', hatBrim: false, cost: 100 },
     { id: 'hat_fancy',     name: 'Fancy Hat',     hatColor: '#7c3aed', hatBrim: true,  cost: 150 },
+    { id: 'hat_santa',     name: 'Santa Hat',     hatColor: '#dc2626', hatBrim: false, cost: 150 },
+    { id: 'hat_wizard',    name: 'Wizard Hat',    hatColor: '#4c1d95', hatBrim: true,  cost: 250 },
     { id: 'hat_golden',    name: 'Golden Crown',  hatColor: '#f59e0b', hatBrim: true,  cost: 300 },
   ],
   tools: [
@@ -71,12 +87,22 @@ const WARDROBE = {
 
 // ─── Combat & castle shop constants ──────────────────────────────────────────
 const WEAPONS_SHOP = [
-  { id: 'wooden_sword',  name: 'Wooden Sword',  emoji: '🗡️', damage: 1, range: 0, cost: 100,  killsRequired: 0 },
-  { id: 'iron_sword',    name: 'Iron Sword',    emoji: '⚔️',  damage: 2, range: 0, cost: 500,  killsRequired: 3 },
-  { id: 'golden_sword',  name: 'Golden Sword',  emoji: '✨',  damage: 3, range: 0, cost: 2000, killsRequired: 8 },
-  { id: 'crystal_sword', name: 'Crystal Sword', emoji: '💎', damage: 5, range: 0, cost: 8000, killsRequired: 15 },
-  { id: 'wooden_bow',    name: 'Wooden Bow',    emoji: '🏹', damage: 2, range: 6, cost: 200,  killsRequired: 2 },
-  { id: 'iron_bow',      name: 'Iron Bow',      emoji: '🎯', damage: 3, range: 8, cost: 1000, killsRequired: 7 },
+  { id: 'wooden_sword',  name: 'Wooden Sword',  emoji: '🗡️', damage: 1,  range: 0,  cost: 100,        killsRequired: 0   },
+  { id: 'iron_sword',    name: 'Iron Sword',    emoji: '⚔️',  damage: 2,  range: 0,  cost: 500,        killsRequired: 3   },
+  { id: 'golden_sword',  name: 'Golden Sword',  emoji: '✨',  damage: 3,  range: 0,  cost: 2000,       killsRequired: 8   },
+  { id: 'crystal_sword', name: 'Crystal Sword', emoji: '💎', damage: 5,  range: 0,  cost: 8000,       killsRequired: 15  },
+  { id: 'dragon_sword',  name: 'Dragon Sword',  emoji: '🔥', damage: 8,  range: 0,  cost: 30000,      killsRequired: 25  },
+  { id: 'void_sword',    name: 'Void Sword',    emoji: '🌑', damage: 12, range: 0,  cost: 120000,     killsRequired: 40  },
+  { id: 'titan_sword',   name: 'Titan Sword',   emoji: '⚡', damage: 18, range: 0,  cost: 500000,     killsRequired: 60  },
+  { id: 'godly_sword',   name: 'Godly Sword',   emoji: '🌠', damage: 25, range: 0,  cost: 2000000,    killsRequired: 85  },
+  { id: 'mythic_sword',  name: 'Mythic Sword',  emoji: '🌟', damage: 35, range: 0,  cost: 10000000,   killsRequired: 120 },
+  { id: 'wooden_bow',    name: 'Wooden Bow',    emoji: '🏹', damage: 2,  range: 6,  cost: 200,        killsRequired: 2   },
+  { id: 'iron_bow',      name: 'Iron Bow',      emoji: '🎯', damage: 3,  range: 8,  cost: 1000,       killsRequired: 7   },
+  { id: 'golden_bow',    name: 'Golden Bow',    emoji: '💛', damage: 5,  range: 10, cost: 6000,       killsRequired: 18  },
+  { id: 'crystal_bow',   name: 'Crystal Bow',   emoji: '💠', damage: 8,  range: 12, cost: 40000,      killsRequired: 35  },
+  { id: 'dragon_bow',    name: 'Dragon Bow',    emoji: '🐉', damage: 12, range: 14, cost: 200000,     killsRequired: 55  },
+  { id: 'titan_bow',     name: 'Titan Bow',     emoji: '⚡', damage: 18, range: 17, cost: 1000000,    killsRequired: 80  },
+  { id: 'mythic_bow',    name: 'Mythic Bow',    emoji: '🌟', damage: 28, range: 20, cost: 10000000,   killsRequired: 120 },
 ]
 const ARMOUR_SHOP = [
   { id: 'leather_armour', name: 'Leather Armour', emoji: '🛡️', defense: 1, cost: 150,  killsRequired: 2 },
@@ -428,20 +454,27 @@ function LoginOverlay({ onLogin }) {
               <div>
                 <label className="block text-xs font-semibold text-green-700 mb-1">Game Mode</label>
                 <div className="flex gap-2">
-                  {['regular', 'hardcore'].map(m => (
+                  {['regular', 'hardcore', 'peaceful'].map(m => (
                     <button key={m} type="button" onClick={() => setMode(m)}
                       className={`flex-1 py-2 rounded-xl text-sm font-bold border-2 transition-colors ${
                         mode === m
-                          ? m === 'hardcore' ? 'bg-red-500 text-white border-red-500' : 'bg-green-500 text-white border-green-500'
+                          ? m === 'hardcore' ? 'bg-red-500 text-white border-red-500'
+                            : m === 'peaceful' ? 'bg-blue-500 text-white border-blue-500'
+                            : 'bg-green-500 text-white border-green-500'
                           : 'bg-gray-50 text-gray-500 border-gray-200 hover:border-gray-300'
                       }`}>
-                      {m === 'regular' ? '🌿 Regular' : '💀 Hardcore'}
+                      {m === 'regular' ? '🌿 Regular' : m === 'hardcore' ? '💀 Hardcore' : '🕊️ Peaceful'}
                     </button>
                   ))}
                 </div>
                 {mode === 'hardcore' && (
                   <p className="text-xs text-red-500 mt-1 font-medium">
                     On death: all progress is lost and you restart from Day 1.
+                  </p>
+                )}
+                {mode === 'peaceful' && (
+                  <p className="text-xs text-blue-500 mt-1 font-medium">
+                    No zombies. Just farming and exploring! 🌻
                   </p>
                 )}
               </div>
@@ -636,7 +669,7 @@ function StatsPanel({ profile, onClose, onLogout }) {
     <motion.div className="fixed inset-0 z-40 flex items-center justify-center p-4"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
       <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
-      <motion.div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6"
+      <motion.div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 overflow-y-auto max-h-[90vh]"
         initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
@@ -669,13 +702,6 @@ function StatsPanel({ profile, onClose, onLogout }) {
           whileTap={{ scale: 0.97 }}>
           <LogOut size={16} /> Log Out
         </motion.button>
-        <button onClick={() => {
-          if (window.confirm('Reset all progress? This cannot be undone.')) {
-            localStorage.removeItem(STORAGE_KEY); window.location.reload()
-          }
-        }} className="mt-2 w-full text-sm text-red-400 hover:text-red-600 font-semibold py-1">
-          Reset Garden
-        </button>
       </motion.div>
     </motion.div>
   )
@@ -1006,7 +1032,7 @@ function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEqui
           {['weapons','armour','axes'].map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-2.5 text-xs font-bold ${tab===t?'text-red-600 border-b-2 border-red-400':'text-gray-400'}`}>
-              {t === 'weapons' ? '⚔️ Swords' : t === 'armour' ? '🛡️ Armour' : '🪓 Axes'}
+              {t === 'weapons' ? '⚔️ Weapons' : t === 'armour' ? '🛡️ Armour' : '🪓 Axes'}
             </button>
           ))}
         </div>
@@ -1273,7 +1299,9 @@ export default function App() {
   const [castleShop, setCastleShop]   = useState(null)   // 'weapons'|'carpentry'|'potions'|'general'
   const [npcDialog, setNpcDialog]     = useState(null)   // npc id showing dialog
   const [nearNpcId, setNearNpcId]     = useState(null)
-  const [equipSource, setEquipSource] = useState('weapon')  // 'weapon' | 'seeds'
+  const [equipSource, setEquipSource] = useState('sword')  // 'sword' | 'bow' | 'axe' | 'seeds'
+  const [cycleProgress, setCycleProgress] = useState(0)    // 0-1 progress within current phase
+  const [respawnSignal, setRespawnSignal] = useState(0)    // increments to trigger Garden3D respawn
   const dayTimerRef  = useRef(0)
   const dayPhaseRef  = useRef('day')
   const tickerRef    = useRef()
@@ -1348,9 +1376,15 @@ export default function App() {
   useEffect(() => {
     const interval = setInterval(() => {
       dayTimerRef.current += 1000
-      const cycleMs = (DAY_SECONDS + NIGHT_SECONDS) * 1000
-      const pos     = dayTimerRef.current % cycleMs
-      const newPhase = pos >= DAY_SECONDS * 1000 ? 'night' : 'day'
+      const cycleMs   = (DAY_SECONDS + NIGHT_SECONDS) * 1000
+      const pos       = dayTimerRef.current % cycleMs
+      const newPhase  = pos >= DAY_SECONDS * 1000 ? 'night' : 'day'
+      // Update progress within the current phase
+      if (newPhase === 'day') {
+        setCycleProgress(pos / (DAY_SECONDS * 1000))
+      } else {
+        setCycleProgress((pos - DAY_SECONDS * 1000) / (NIGHT_SECONDS * 1000))
+      }
       if (newPhase !== dayPhaseRef.current) {
         dayPhaseRef.current = newPhase
         setDayPhase(newPhase)
@@ -1392,9 +1426,13 @@ export default function App() {
           }
         }
       } else {
-        // Offline: load localStorage
+        // Offline / local dev (no API server): fall back to localStorage
         const local = loadLocal()
-        if (local?.username?.toLowerCase() === username.toLowerCase()) {
+        if (isRegister) {
+          // Allow creating a new account locally when running without a server
+          loaded = hydrateProfile({ ...starter, username })
+          success = true
+        } else if (local?.username?.toLowerCase() === username.toLowerCase()) {
           loaded = local
           success = true
         } else {
@@ -1486,11 +1524,12 @@ export default function App() {
             gameMode: 'hardcore',
           } : prev)
         } else {
-          // Regular: respawn, lose plants
-          showToast('💀 You were killed! Plants destroyed. Respawning...')
+          // Regular: respawn at house, lose plants
+          showToast('💀 You were killed! Respawning at the house...')
           dayPhaseRef.current = 'day'
           dayTimerRef.current = 0
           setDayPhase('day')
+          setRespawnSignal(s => s + 1)
           setProfile(prev => prev ? ({
             ...prev,
             plots: Array(prev.plots.length).fill(null),
@@ -1516,13 +1555,32 @@ export default function App() {
 
   // ── NPC / castle shop handlers (tasks 1, 7, 8) ───────────────────────────
   const handleTalkToNpc = useCallback((npcId) => {
+    if (npcDialog || castleShop) return  // prevent opening when a dialog/shop is already open
     setNpcDialog(npcId)
-  }, [])
+  }, [npcDialog, castleShop])
 
   const handleNpcOpenShop = useCallback(() => {
     setCastleShop(npcDialog)
     setNpcDialog(null)
   }, [npcDialog])
+
+  // Tasks 3 & 5: hotbar keys 1-4 and E to close active shop/dialog
+  useEffect(() => {
+    const handleKey = (e) => {
+      // Task 5: E closes active shop or dialog
+      if (e.code === 'KeyE') {
+        if (castleShop) { setCastleShop(null); return }
+        if (npcDialog)  { setNpcDialog(null);  return }
+      }
+      // Task 3: number keys select hotbar slot
+      if (e.key === '1') setEquipSource('sword')
+      else if (e.key === '2') setEquipSource('axe')
+      else if (e.key === '3') setEquipSource('bow')
+      else if (e.key === '4') setEquipSource('seeds')
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [castleShop, npcDialog])
 
   const handleBuyWeapon = useCallback((item) => {
     setProfile(prev => {
@@ -1772,6 +1830,15 @@ export default function App() {
 
   if (!profile) return null
 
+  // Don't run the game behind the login screen
+  if (showLogin) {
+    return (
+      <div className="fixed inset-0 overflow-hidden font-rounded">
+        <LoginOverlay onLogin={handleLogin} />
+      </div>
+    )
+  }
+
   const totalRows = 5 + (profile.extraRows || 0)
   const plots     = [...profile.plots]
   while (plots.length < totalRows * 5) plots.push(null)
@@ -1808,6 +1875,9 @@ export default function App() {
         chopDamage={chopDamage}
         onTreeChopped={handleTreeChopped}
         treeBaseReward={TREE_BASE_REWARD}
+        respawnSignal={respawnSignal}
+        onMessage={showToast}
+        shopOpen={!!(castleShop || npcDialog)}
       />
 
       <AnimatePresence>
@@ -1954,9 +2024,16 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2 pointer-events-auto flex-wrap justify-end">
-            {/* Day/night indicator */}
-            <div className={`flex items-center gap-1.5 backdrop-blur border rounded-2xl px-3 py-2 shadow text-sm font-bold ${dayPhase === 'night' ? 'bg-indigo-900/80 border-indigo-600 text-indigo-100' : 'bg-yellow-50/80 border-yellow-200 text-yellow-700'}`}>
-              {dayPhase === 'night' ? '🌙 Night' : '☀️ Day'} {profile.dayCount || 1}
+            {/* Day/night indicator + clock */}
+            <div className={`flex items-center gap-2 backdrop-blur border rounded-2xl px-3 py-2 shadow text-sm font-bold ${dayPhase === 'night' ? 'bg-indigo-900/80 border-indigo-600 text-indigo-100' : 'bg-yellow-50/80 border-yellow-200 text-yellow-700'}`}>
+              {dayPhase === 'night' ? '🌙' : '☀️'} {dayPhase === 'night' ? 'Night' : 'Day'} {profile.dayCount || 1}
+              <div className="w-16 h-2 bg-black/20 rounded-full overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-1000 ${dayPhase === 'night' ? 'bg-indigo-300' : 'bg-yellow-300'}`}
+                  style={{ width: `${Math.round(cycleProgress * 100)}%` }}
+                />
+              </div>
+              <span className="text-xs opacity-70">{Math.round(cycleProgress * 100)}%</span>
             </div>
             {/* HP bar */}
             <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur border border-red-200 rounded-2xl px-3 py-2 shadow">
@@ -2019,48 +2096,58 @@ export default function App() {
             ✨ Fertilizer active — next plant grows 2× faster!
           </motion.p>
         )}
-        {/* Hotbar: weapon slot + seed slots */}
-        <div className="bg-white/80 backdrop-blur rounded-2xl p-2 shadow flex flex-wrap gap-1.5 items-center">
-          {/* Weapon section */}
-          <span className="text-xs font-bold text-red-400 uppercase tracking-wider px-1">⚔️</span>
-          {WEAPONS_SHOP.filter(w => (profile.ownedWeapons || {})[w.id]).length === 0 ? (
-            <span className="text-xs text-gray-400 px-1 italic">No weapon</span>
-          ) : (
-            WEAPONS_SHOP.filter(w => (profile.ownedWeapons || {})[w.id]).map(weapon => (
-              <motion.button key={weapon.id}
-                onClick={() => handleEquipWeapon(weapon)}
-                className={`px-2.5 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${
-                  profile.equippedWeapon === weapon.id
-                    ? 'border-red-400 bg-red-50 text-red-700'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-red-200'
-                }`}
-                whileTap={{ scale: 0.92 }} title={weapon.name}>
-                {weapon.emoji}
-              </motion.button>
-            ))
+        {/* Hotbar: mode tabs + seed sub-bar */}
+        <div className="flex flex-col gap-1.5">
+          {/* Mode tabs */}
+          <div className="bg-white/80 backdrop-blur rounded-2xl p-1.5 shadow flex gap-1.5 items-center justify-center">
+            {[
+              { key: 'sword', label: 'Sword', emoji: '⚔️',  color: 'red'   },
+              { key: 'bow',   label: 'Bow',   emoji: '🏹',  color: 'amber' },
+              { key: 'axe',   label: 'Axe',   emoji: '🪓',  color: 'orange'},
+              { key: 'seeds', label: 'Seeds', emoji: '🌱',  color: 'green' },
+            ].map(({ key, label, emoji, color }) => {
+              const active = equipSource === key
+              const colorMap = {
+                red:    active ? 'border-red-400 bg-red-50 text-red-700'       : 'border-gray-200 bg-white text-gray-500 hover:border-red-200',
+                amber:  active ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-gray-500 hover:border-amber-200',
+                orange: active ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-500 hover:border-orange-200',
+                green:  active ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-500 hover:border-green-200',
+              }
+              return (
+                <motion.button key={key}
+                  onClick={() => setEquipSource(key)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${colorMap[color]}`}
+                  whileTap={{ scale: 0.92 }}>
+                  <span>{emoji}</span>
+                  <span className="hidden sm:inline">{label}</span>
+                </motion.button>
+              )
+            })}
+          </div>
+          {/* Seed sub-bar — only visible in seeds mode */}
+          {equipSource === 'seeds' && (
+            <div className="bg-white/80 backdrop-blur rounded-2xl p-1.5 shadow flex flex-wrap gap-1.5 items-center justify-center">
+              {seedBarPlants.map(plant => {
+                const owned     = profile.ownedSeeds[plant.id] || 0
+                const available = plant.seedCost === 0 || owned > 0
+                return (
+                  <motion.button key={plant.id}
+                    onClick={() => available && setSelectedSeed(plant.id)}
+                    className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${
+                      selectedSeed === plant.id ? 'border-green-400 bg-green-50 text-green-700'
+                      : available ? 'border-gray-200 bg-white text-gray-600 hover:border-green-200'
+                      : 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'}`}
+                    whileTap={available ? { scale: 0.92 } : {}}>
+                    <span>{plant.emoji}</span>
+                    <span className="hidden sm:inline text-xs">{plant.name}</span>
+                    {plant.seedCost > 0 && (
+                      <span className={`text-xs ${owned > 0 ? 'text-green-500' : 'text-gray-300'}`}>×{owned}</span>
+                    )}
+                  </motion.button>
+                )
+              })}
+            </div>
           )}
-          <div className="w-px h-6 bg-gray-200 mx-0.5" />
-          {/* Seed section */}
-          <span className="text-xs font-bold text-green-500 uppercase tracking-wider px-1">🌱</span>
-          {seedBarPlants.map(plant => {
-            const owned     = profile.ownedSeeds[plant.id] || 0
-            const available = plant.seedCost === 0 || owned > 0
-            return (
-              <motion.button key={plant.id}
-                onClick={() => { available && setSelectedSeed(plant.id); setEquipSource('seeds') }}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${
-                  selectedSeed === plant.id && equipSource === 'seeds' ? 'border-green-400 bg-green-50 text-green-700'
-                  : available ? 'border-gray-200 bg-white text-gray-600 hover:border-green-200'
-                  : 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'}`}
-                whileTap={available ? { scale: 0.92 } : {}}>
-                <span>{plant.emoji}</span>
-                <span className="hidden sm:inline text-xs">{plant.name}</span>
-                {plant.seedCost > 0 && (
-                  <span className={`text-xs ${owned > 0 ? 'text-green-500' : 'text-gray-300'}`}>×{owned}</span>
-                )}
-              </motion.button>
-            )
-          })}
         </div>
         {(profile.dayCount || 1) <= 1 && (
           <p className="text-center text-xs text-white/70 font-semibold drop-shadow">

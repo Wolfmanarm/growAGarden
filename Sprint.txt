@@ -1,1 +1,1 @@
-1: creating a new account does not work in the production environment. fix this. [DONE]
+1: make pressing "3" select the axe, and pressing "2" select the bow.

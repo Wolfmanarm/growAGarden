@@ -86,10 +86,11 @@ if (process.env.DATABASE_URL) {
     }
 
     const stmt = db.prepare(sqliteSql)
-    if (paramArray.length > 0) {
-      return stmt.all(...paramArray)
+    const isWrite = /^\s*(INSERT|UPDATE|DELETE)/i.test(sqliteSql)
+    if (isWrite) {
+      return paramArray.length > 0 ? stmt.run(...paramArray) : stmt.run()
     } else {
-      return stmt.all()
+      return paramArray.length > 0 ? stmt.all(...paramArray) : stmt.all()
     }
   }
 
