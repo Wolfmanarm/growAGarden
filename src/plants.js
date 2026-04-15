@@ -152,9 +152,14 @@ function buildPlants() {
     const seedCost  = id === 'daisy' ? 0 : Math.max(5, Math.round(reward * 0.9))
     const unlockCost = id === 'daisy' ? 0 : Math.round(reward * 10)
 
+    // Top 3 seeds (last 3 of tier 5) require diamonds to unlock
+    const DIAMOND_SEED_COSTS = { celestial_seed: 25, perfect_petal: 75, genesis_bloom: 200 }
+    const diamondUnlockCost = DIAMOND_SEED_COSTS[id]
+
     result[id] = {
       id, name, emoji, tier,
       growTime, reward, seedCost, unlockCost,
+      ...(diamondUnlockCost !== undefined ? { diamondUnlockCost } : {}),
       ...cfg.theme,
       description: TIER_DESC[tier](name, growTime, reward),
     }

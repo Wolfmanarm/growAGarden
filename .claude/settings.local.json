@@ -10,7 +10,9 @@
       "Bash(node -e \"require\\(''''@react-three/fiber''''\\)\")",
       "Bash(curl -s http://localhost:3001/api/health)",
       "Bash(node --input-type=module --eval \"import\\(''''./src/plants.js''''\\)\")",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(mkdir -p \"C:\\\\programming projects\\\\growAGarden\\\\public\\\\music\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

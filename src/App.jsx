@@ -93,22 +93,27 @@ const WEAPONS_SHOP = [
   { id: 'crystal_sword', name: 'Crystal Sword', emoji: '💎', damage: 5,  range: 0,  cost: 8000,       killsRequired: 15  },
   { id: 'dragon_sword',  name: 'Dragon Sword',  emoji: '🔥', damage: 8,  range: 0,  cost: 30000,      killsRequired: 25  },
   { id: 'void_sword',    name: 'Void Sword',    emoji: '🌑', damage: 12, range: 0,  cost: 120000,     killsRequired: 40  },
-  { id: 'titan_sword',   name: 'Titan Sword',   emoji: '⚡', damage: 18, range: 0,  cost: 500000,     killsRequired: 60  },
-  { id: 'godly_sword',   name: 'Godly Sword',   emoji: '🌠', damage: 25, range: 0,  cost: 2000000,    killsRequired: 85  },
-  { id: 'mythic_sword',  name: 'Mythic Sword',  emoji: '🌟', damage: 35, range: 0,  cost: 10000000,   killsRequired: 120 },
+  { id: 'titan_sword',   name: 'Titan Sword',   emoji: '⚡', damage: 18, range: 0,  cost: 0,          killsRequired: 60,  diamondCost: 75  },
+  { id: 'godly_sword',   name: 'Godly Sword',   emoji: '🌠', damage: 25, range: 0,  cost: 0,          killsRequired: 85,  diamondCost: 250 },
+  { id: 'mythic_sword',  name: 'Mythic Sword',  emoji: '🌟', damage: 35, range: 0,  cost: 0,          killsRequired: 120, diamondCost: 600 },
   { id: 'wooden_bow',    name: 'Wooden Bow',    emoji: '🏹', damage: 2,  range: 6,  cost: 200,        killsRequired: 2   },
   { id: 'iron_bow',      name: 'Iron Bow',      emoji: '🎯', damage: 3,  range: 8,  cost: 1000,       killsRequired: 7   },
   { id: 'golden_bow',    name: 'Golden Bow',    emoji: '💛', damage: 5,  range: 10, cost: 6000,       killsRequired: 18  },
   { id: 'crystal_bow',   name: 'Crystal Bow',   emoji: '💠', damage: 8,  range: 12, cost: 40000,      killsRequired: 35  },
   { id: 'dragon_bow',    name: 'Dragon Bow',    emoji: '🐉', damage: 12, range: 14, cost: 200000,     killsRequired: 55  },
-  { id: 'titan_bow',     name: 'Titan Bow',     emoji: '⚡', damage: 18, range: 17, cost: 1000000,    killsRequired: 80  },
-  { id: 'mythic_bow',    name: 'Mythic Bow',    emoji: '🌟', damage: 28, range: 20, cost: 10000000,   killsRequired: 120 },
+  { id: 'titan_bow',     name: 'Titan Bow',     emoji: '⚡', damage: 18, range: 17, cost: 0,          killsRequired: 80,  diamondCost: 80  },
+  { id: 'mythic_bow',    name: 'Mythic Bow',    emoji: '🌟', damage: 28, range: 20, cost: 0,          killsRequired: 120, diamondCost: 400 },
 ]
 const ARMOUR_SHOP = [
-  { id: 'leather_armour', name: 'Leather Armour', emoji: '🛡️', defense: 1, cost: 150,  killsRequired: 2 },
-  { id: 'iron_armour',    name: 'Iron Armour',    emoji: '🔩',  defense: 2, cost: 800,  killsRequired: 5 },
-  { id: 'golden_armour',  name: 'Golden Armour',  emoji: '🌟', defense: 3, cost: 3000, killsRequired: 10 },
-  { id: 'crystal_armour', name: 'Crystal Armour', emoji: '💎', defense: 5, cost: 12000, killsRequired: 18 },
+  { id: 'leather_armour', name: 'Leather Armour', emoji: '🛡️', defense: 1,  cost: 150,     killsRequired: 2   },
+  { id: 'iron_armour',    name: 'Iron Armour',    emoji: '🔩',  defense: 2,  cost: 800,     killsRequired: 5,   woodCost: 15  },
+  { id: 'golden_armour',  name: 'Golden Armour',  emoji: '🌟', defense: 3,  cost: 3000,    killsRequired: 10,  woodCost: 40  },
+  { id: 'crystal_armour', name: 'Crystal Armour', emoji: '💎', defense: 5,  cost: 12000,   killsRequired: 18,  woodCost: 100 },
+  { id: 'dragon_armour',  name: 'Dragon Armour',  emoji: '🐉', defense: 8,  cost: 60000,   killsRequired: 30,  woodCost: 250 },
+  { id: 'titan_armour',   name: 'Titan Armour',   emoji: '⚡', defense: 12, cost: 300000,  killsRequired: 50,  woodCost: 500 },
+  { id: 'void_armour',    name: 'Void Armour',    emoji: '🌑', defense: 18, cost: 0,       killsRequired: 75,  diamondCost: 50  },
+  { id: 'godly_armour',   name: 'Godly Armour',   emoji: '🌠', defense: 25, cost: 0,       killsRequired: 100, diamondCost: 200 },
+  { id: 'mythic_armour',  name: 'Mythic Armour',  emoji: '✨', defense: 35, cost: 0,       killsRequired: 130, diamondCost: 500 },
 ]
 const POTIONS_SHOP = [
   { id: 'small_potion',  name: 'Small Potion',  emoji: '🧪', hp: 3,  cost: 50  },
@@ -116,9 +121,15 @@ const POTIONS_SHOP = [
   { id: 'large_potion',  name: 'Large Potion',  emoji: '🫙', hp: 10, cost: 200 },
 ]
 const AXES_SHOP = [
-  { id: 'wooden_axe', name: 'Wooden Axe', emoji: '🪓', chopDamage: 1, cost: 80,   killsRequired: 0 },
-  { id: 'iron_axe',   name: 'Iron Axe',   emoji: '⛏️',  chopDamage: 2, cost: 400,  killsRequired: 3 },
-  { id: 'steel_axe',  name: 'Steel Axe',  emoji: '🔱',  chopDamage: 4, cost: 1500, killsRequired: 8 },
+  { id: 'wooden_axe',  name: 'Wooden Axe',  emoji: '🪓', chopDamage: 1,   cost: 80,       killsRequired: 0   },
+  { id: 'iron_axe',    name: 'Iron Axe',    emoji: '⛏️',  chopDamage: 2,   cost: 400,      killsRequired: 3,   woodCost: 10  },
+  { id: 'steel_axe',   name: 'Steel Axe',   emoji: '🔱',  chopDamage: 4,   cost: 1500,     killsRequired: 8,   woodCost: 30  },
+  { id: 'golden_axe',  name: 'Golden Axe',  emoji: '✨', chopDamage: 7,   cost: 8000,     killsRequired: 18,  woodCost: 80  },
+  { id: 'crystal_axe', name: 'Crystal Axe', emoji: '💎', chopDamage: 12,  cost: 40000,    killsRequired: 35,  woodCost: 200 },
+  { id: 'dragon_axe',  name: 'Dragon Axe',  emoji: '🐉', chopDamage: 20,  cost: 200000,   killsRequired: 55,  woodCost: 400 },
+  { id: 'titan_axe',   name: 'Titan Axe',   emoji: '⚡', chopDamage: 35,  cost: 0,        killsRequired: 80,  diamondCost: 100 },
+  { id: 'mythic_axe',  name: 'Mythic Axe',  emoji: '🌟', chopDamage: 60,  cost: 0,        killsRequired: 120, diamondCost: 300 },
+  { id: 'legend_axe',  name: 'Legend Axe',  emoji: '👑', chopDamage: 100, cost: 0,        killsRequired: 150, diamondCost: 800 },
 ]
 const SAWMILL_UPGRADES = [
   { id: 'sawmill_1',  name: 'Basic Sawmill',    emoji: '🪚', cost: 500,    woodMult: 1.5,  description: '1.5× wood income.'   },
@@ -128,25 +139,32 @@ const SAWMILL_UPGRADES = [
   { id: 'sawmill_5',  name: 'Steel Sawmill',    emoji: '🔧', cost: 18000,  woodMult: 8.0,  description: '8× wood income.'     },
   { id: 'sawmill_6',  name: 'Diamond Saw',      emoji: '💎', cost: 40000,  woodMult: 12.0, description: '12× wood income.'    },
   { id: 'sawmill_7',  name: 'Turbo Sawmill',    emoji: '⚡', cost: 80000,  woodMult: 20.0, description: '20× wood income.'    },
-  { id: 'sawmill_8',  name: 'Quantum Saw',      emoji: '🔬', cost: 150000, woodMult: 35.0, description: '35× wood income.'    },
-  { id: 'sawmill_9',  name: 'Plasma Sawmill',   emoji: '🌟', cost: 300000, woodMult: 60.0, description: '60× wood income.'    },
-  { id: 'sawmill_10', name: 'Legendary Saw',    emoji: '👑', cost: 500000, woodMult: 100.0,description: '100× wood income.'   },
+  { id: 'sawmill_8',  name: 'Quantum Saw',      emoji: '🔬', cost: 0,      woodMult: 35.0, description: '35× wood income.',   diamondCost: 30  },
+  { id: 'sawmill_9',  name: 'Plasma Sawmill',   emoji: '🌟', cost: 0,      woodMult: 60.0, description: '60× wood income.',   diamondCost: 80  },
+  { id: 'sawmill_10', name: 'Legendary Saw',    emoji: '👑', cost: 0,      woodMult: 100.0,description: '100× wood income.',  diamondCost: 200 },
 ]
 
 // ─── Permanent fertilizer upgrade tiers ──────────────────────────────────────
 const FERTILIZER_UPGRADES = [
-  { id: 'fert_1',  name: 'Bone Meal',       emoji: '🦴', cost: 200,    speedMult: 1.5,  description: 'Plants grow 1.5× faster permanently.' },
-  { id: 'fert_2',  name: 'Compost Mix',     emoji: '🌿', cost: 500,    speedMult: 2.0,  description: '2× permanent grow speed.'             },
-  { id: 'fert_3',  name: 'Growth Serum',    emoji: '🧪', cost: 1500,   speedMult: 3.0,  description: '3× permanent grow speed.'             },
-  { id: 'fert_4',  name: 'Super Grow',      emoji: '⚗️',  cost: 4000,   speedMult: 5.0,  description: '5× permanent grow speed.'             },
-  { id: 'fert_5',  name: 'Turbo Bloom',     emoji: '🌸', cost: 10000,  speedMult: 8.0,  description: '8× permanent grow speed.'             },
-  { id: 'fert_6',  name: 'Magic Compost',   emoji: '✨', cost: 25000,  speedMult: 12.0, description: '12× permanent grow speed.'            },
-  { id: 'fert_7',  name: 'Hyper Growth',    emoji: '🌱', cost: 60000,  speedMult: 20.0, description: '20× permanent grow speed.'            },
-  { id: 'fert_8',  name: 'Time Warp Mix',   emoji: '⏰', cost: 120000, speedMult: 35.0, description: '35× permanent grow speed.'            },
-  { id: 'fert_9',  name: 'Quantum Feed',    emoji: '🔬', cost: 250000, speedMult: 60.0, description: '60× permanent grow speed.'            },
-  { id: 'fert_10', name: 'Legend Brew',     emoji: '👑', cost: 500000, speedMult: 100.0,description: '100× permanent grow speed.'           },
+  { id: 'fert_1',  name: 'Bone Meal',       emoji: '🦴', cost: 200,    speedMult: 1.5,  description: '1.5× grow speed (100 plants per charge).' },
+  { id: 'fert_2',  name: 'Compost Mix',     emoji: '🌿', cost: 500,    speedMult: 2.0,  description: '2× grow speed (100 plants per charge).'   },
+  { id: 'fert_3',  name: 'Growth Serum',    emoji: '🧪', cost: 1500,   speedMult: 3.0,  description: '3× grow speed (100 plants per charge).'   },
+  { id: 'fert_4',  name: 'Super Grow',      emoji: '⚗️',  cost: 4000,   speedMult: 5.0,  description: '5× grow speed (100 plants per charge).'   },
+  { id: 'fert_5',  name: 'Turbo Bloom',     emoji: '🌸', cost: 10000,  speedMult: 8.0,  description: '8× grow speed (100 plants per charge).'   },
+  { id: 'fert_6',  name: 'Magic Compost',   emoji: '✨', cost: 25000,  speedMult: 12.0, description: '12× grow speed (100 plants per charge).'  },
+  { id: 'fert_7',  name: 'Hyper Growth',    emoji: '🌱', cost: 60000,  speedMult: 20.0, description: '20× grow speed (100 plants per charge).'  },
+  { id: 'fert_8',  name: 'Time Warp Mix',   emoji: '⏰', cost: 0,      speedMult: 35.0, description: '35× grow speed (100 plants).',        diamondCost: 25  },
+  { id: 'fert_9',  name: 'Quantum Feed',    emoji: '🔬', cost: 0,      speedMult: 60.0, description: '60× grow speed (100 plants).',        diamondCost: 70  },
+  { id: 'fert_10', name: 'Legend Brew',     emoji: '👑', cost: 0,      speedMult: 100.0,description: '100× grow speed (100 plants).',       diamondCost: 180 },
 ]
-const TREE_BASE_REWARD = 25   // petals per tree
+const TREE_BASE_WOOD = 5   // wood per tree chop
+
+const DIAMOND_PACKS = [
+  { id: 'pack_sm',  name: 'Small Pouch',  emoji: '💎', amount: 500,   price: '$0.99'  },
+  { id: 'pack_md',  name: 'Medium Chest', emoji: '💎', amount: 2500,  price: '$3.99'  },
+  { id: 'pack_lg',  name: 'Large Vault',  emoji: '💎', amount: 7500,  price: '$9.99'  },
+  { id: 'pack_xl',  name: 'Mega Hoard',   emoji: '💎', amount: 25000, price: '$24.99' },
+]
 
 const DAY_SECONDS   = 5 * 60   // 5 minutes
 const NIGHT_SECONDS = 2 * 60   // 2 minutes
@@ -176,21 +194,29 @@ const DEFAULT_WARDROBE_OWNED = {
   shovel: true,
 }
 
+// ─── Music tracks ─────────────────────────────────────────────────────────────
+// Developers: drop .wav/.mp3 files in public/music/ and add entries here.
+const MUSIC_TRACKS = [
+  { title: 'Peaceful Garden', src: '/music/peaceful_garden.wav' },
+  { title: 'Farm Life',       src: '/music/farm_life.wav'       },
+  { title: 'Night Sounds',    src: '/music/night_sounds.wav'    },
+]
+
 // ─── Sound ────────────────────────────────────────────────────────────────────
 function playCrunchSound() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)()
-    const duration = 0.13
+    const duration = 0.10
     const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * duration), ctx.sampleRate)
     const data = buf.getChannelData(0)
     for (let i = 0; i < data.length; i++) {
       const t = i / ctx.sampleRate
-      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 38) * 0.9
+      data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 55) * 0.45
     }
     const src  = ctx.createBufferSource()
     src.buffer = buf
     const gain = ctx.createGain()
-    gain.gain.value = 0.28
+    gain.gain.value = 0.08
     src.connect(gain)
     gain.connect(ctx.destination)
     src.start()
@@ -296,6 +322,9 @@ function hydrateProfile(data) {
   if (data.equippedAxe        == null) data.equippedAxe       = null
   if (!data.sawmillUpgrades)         data.sawmillUpgrades     = {}
   if (data.fertilizerTier    == null) data.fertilizerTier     = 0
+  if (data.fertilizerCharges == null) data.fertilizerCharges  = 0
+  if (data.wood              == null) data.wood               = 0
+  if (data.diamonds          == null) data.diamonds           = 0
   if (!data.gameMode)                data.gameMode            = 'regular'
   return data
 }
@@ -341,6 +370,9 @@ function defaultProfile(username = '') {
     equippedAxe: null,
     sawmillUpgrades: {},
     fertilizerTier: 0,
+    fertilizerCharges: 0,
+    wood: 0,
+    diamonds: 0,
     gameMode: 'regular',
     outfit: { ...DEFAULT_OUTFIT },
     wardrobeOwned: { ...DEFAULT_WARDROBE_OWNED },
@@ -381,7 +413,7 @@ function HardcoreGameOverScreen({ days, kills, onDismiss }) {
 
 // ─── Login overlay ────────────────────────────────────────────────────────────
 function LoginOverlay({ onLogin }) {
-  const [tab, setTab]           = useState('login')   // 'login' | 'register'
+  const [tab, setTab]           = useState('register') // 'login' | 'register'
   const [name, setName]         = useState('')
   const [password, setPassword] = useState('')
   const [confirm, setConfirm]   = useState('')
@@ -424,10 +456,10 @@ function LoginOverlay({ onLogin }) {
 
         {/* Tabs */}
         <div className="flex border-b border-gray-100 mx-4">
-          {['login','register'].map(t => (
+          {['register','login'].map(t => (
             <button key={t} onClick={() => { setTab(t); setError('') }}
               className={`flex-1 py-2.5 text-sm font-bold transition-colors ${tab===t?'text-green-600 border-b-2 border-green-400':'text-gray-400 hover:text-gray-600'}`}>
-              {t === 'login' ? '🔑 Log In' : '🌱 New Account'}
+              {t === 'register' ? '🌱 New Account' : '🔑 Log In'}
             </button>
           ))}
         </div>
@@ -520,7 +552,7 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onBuyFertUpgrade, 
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-yellow-50 rounded-xl px-3 py-1.5">
-              <span>🌸</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
+              <span>💰</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
             </div>
             <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
           </div>
@@ -554,18 +586,22 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onBuyFertUpgrade, 
           {tab === 'seeds' && filtered.map(plant => {
             const owned        = profile.ownedSeeds[plant.id] || 0
             const isUnlocked   = (profile.unlockedPlants || []).includes(plant.id)
-            const canAffordUnlock = profile.petals >= plant.unlockCost
+            const isDiamondSeed = !!plant.diamondUnlockCost
+            const canAffordUnlock = isDiamondSeed
+              ? (profile.diamonds || 0) >= plant.diamondUnlockCost
+              : profile.petals >= plant.unlockCost
             const canAffordSeeds  = profile.petals >= plant.seedCost
             const isFree       = plant.seedCost === 0
             return (
               <motion.div key={plant.id} whileTap={{ scale: 0.98 }}
-                className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${plant.border} bg-gradient-to-r ${plant.color} ${!isUnlocked ? 'opacity-80' : ''}`}>
+                className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${isDiamondSeed && !isUnlocked ? 'border-cyan-300 bg-gradient-to-r from-cyan-50 to-blue-50' : `${plant.border} bg-gradient-to-r ${plant.color}`} ${!isUnlocked ? 'opacity-80' : ''}`}>
                 <span className="text-2xl">{plant.emoji}</span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="font-bold text-gray-800 text-sm">{plant.name}</span>
                     <span className="text-xs bg-white/60 rounded-full px-1.5 py-0.5 text-gray-500 font-semibold">{plant.label}</span>
                     {!isUnlocked && <span className="text-xs">🔒</span>}
+                    {isDiamondSeed && !isUnlocked && <span className="text-xs bg-cyan-100 text-cyan-700 rounded-full px-1.5 py-0.5 font-bold">💎 Diamond</span>}
                   </div>
                   <div className="text-xs text-gray-500 truncate">{plant.description}</div>
                 </div>
@@ -577,15 +613,15 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onBuyFertUpgrade, 
                         disabled={!isFree && (!canAffordSeeds || owned >= 99)}
                         className={`text-xs font-bold px-2.5 py-1 rounded-xl ${isFree ? 'bg-green-100 text-green-700 cursor-default' : canAffordSeeds ? 'bg-white text-gray-700 shadow hover:shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                         whileTap={(canAffordSeeds || isFree) ? { scale: 0.9 } : {}}>
-                        {isFree ? 'Free' : `🌸 ${plant.seedCost.toLocaleString()}`}
+                        {isFree ? 'Free' : `💰 ${plant.seedCost.toLocaleString()}`}
                       </motion.button>
                     </>
                   ) : (
                     <motion.button onClick={() => onUnlock(plant.id)}
                       disabled={!canAffordUnlock}
-                      className={`text-xs font-bold px-2.5 py-1 rounded-xl ${canAffordUnlock ? 'bg-green-500 text-white shadow hover:shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                      className={`text-xs font-bold px-2.5 py-1 rounded-xl ${canAffordUnlock ? (isDiamondSeed ? 'bg-cyan-500 text-white shadow' : 'bg-green-500 text-white shadow hover:shadow-md') : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                       whileTap={canAffordUnlock ? { scale: 0.9 } : {}}>
-                      Unlock 🌸 {plant.unlockCost.toLocaleString()}
+                      {isDiamondSeed ? `💎 ${plant.diamondUnlockCost}` : `Unlock 💰 ${plant.unlockCost.toLocaleString()}`}
                     </motion.button>
                   )}
                 </div>
@@ -618,39 +654,50 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onBuyFertUpgrade, 
                       disabled={!canAfford || maxed}
                       className={`text-xs font-bold px-3 py-1.5 rounded-xl ${maxed ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : canAfford ? 'bg-white text-gray-700 shadow hover:shadow-md' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                       whileTap={canAfford && !maxed ? { scale: 0.9 } : {}}>
-                      {maxed ? 'Max' : `🌸 ${cost.toLocaleString()}`}
+                      {maxed ? 'Max' : `💰 ${cost.toLocaleString()}`}
                     </motion.button>
                   </motion.div>
                 )
               })}
 
-              {/* ── Permanent Fertilizer Upgrades ─────────────────────────── */}
+              {/* ── Fertilizer Upgrades (redesigned: unlock then recharge 100 plants) ── */}
               <div className="mt-3 mb-1 px-1">
-                <p className="text-xs font-bold text-green-600 uppercase tracking-wider">🌿 Permanent Fertilizer</p>
+                <p className="text-xs font-bold text-green-600 uppercase tracking-wider">🌿 Fertilizer</p>
                 {(profile.fertilizerTier || 0) > 0 && (
                   <p className="text-xs text-green-500 mt-0.5">
-                    Currently {FERTILIZER_UPGRADES[(profile.fertilizerTier||1)-1]?.speedMult}× grow speed
+                    Active: {FERTILIZER_UPGRADES[(profile.fertilizerTier||1)-1]?.speedMult}× speed · {profile.fertilizerCharges || 0} plants left
                   </p>
                 )}
               </div>
               {FERTILIZER_UPGRADES.map((upgrade, idx) => {
                 const currentTier = profile.fertilizerTier || 0
-                const isOwned = currentTier > idx
-                const isNext  = currentTier === idx
-                const canAfford = profile.petals >= upgrade.cost
+                const isUnlocked  = currentTier > idx
+                const isActive    = currentTier === idx + 1
+                const isNext      = currentTier === idx
+                const hasDiamond  = !!upgrade.diamondCost
+                // task 4 (file): lower non-diamond tiers are locked once a higher one is bought
+                const isSuperseded = !hasDiamond && isUnlocked && currentTier > idx + 1
+                const isLocked    = (idx > currentTier) || isSuperseded
+                const canAffordGold    = !hasDiamond && profile.petals >= upgrade.cost
+                const canAffordDiamond = hasDiamond && (profile.diamonds || 0) >= upgrade.diamondCost
+                const canAfford        = hasDiamond ? canAffordDiamond : canAffordGold
+                const chargesLeft = isActive ? (profile.fertilizerCharges || 0) : 0
+                const isClickable = (isNext || (isUnlocked && !isSuperseded)) && canAfford
                 return (
-                  <motion.div key={upgrade.id} whileTap={isNext && canAfford ? { scale: 0.98 } : {}}
-                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${isOwned ? 'border-green-300 bg-green-50' : isNext ? 'border-lime-200 bg-lime-50' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
+                  <motion.div key={upgrade.id} whileTap={isClickable ? { scale: 0.98 } : {}}
+                    className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${isActive ? 'border-lime-300 bg-lime-50' : isSuperseded ? 'border-gray-100 bg-gray-50 opacity-40' : isUnlocked ? 'border-green-200 bg-green-50' : isNext ? 'border-lime-100 bg-white' : 'border-gray-100 bg-gray-50 opacity-60'}`}>
                     <span className="text-3xl">{upgrade.emoji}</span>
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-gray-800 text-sm">{upgrade.name}</div>
                       <div className="text-xs text-gray-500">{upgrade.description}</div>
+                      {isActive && <div className="text-xs text-lime-600 font-bold mt-0.5">⚡ Active — {chargesLeft}/100 plants</div>}
+                      {isSuperseded && <div className="text-xs text-gray-400 mt-0.5">Replaced by higher tier</div>}
                     </div>
-                    <motion.button onClick={() => isNext && onBuyFertUpgrade()}
-                      disabled={!isNext || !canAfford}
-                      className={`text-xs font-bold px-3 py-1.5 rounded-xl flex-shrink-0 ${isOwned ? 'bg-green-100 text-green-700' : isNext && canAfford ? 'bg-lime-500 text-white shadow hover:bg-lime-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-                      whileTap={isNext && canAfford ? { scale: 0.9 } : {}}>
-                      {isOwned ? '✓ Done' : isNext ? `🌸 ${upgrade.cost.toLocaleString()}` : '🔒'}
+                    <motion.button onClick={() => isClickable && onBuyFertUpgrade(idx)}
+                      disabled={isLocked || !canAfford}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-xl flex-shrink-0 ${isLocked ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : isClickable ? (hasDiamond ? 'bg-cyan-500 text-white shadow' : 'bg-lime-500 text-white shadow hover:bg-lime-600') : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                      whileTap={isClickable ? { scale: 0.9 } : {}}>
+                      {isLocked ? '🔒' : hasDiamond ? `💎 ${upgrade.diamondCost}` : isNext ? `Unlock 💰 ${upgrade.cost.toLocaleString()}` : `+100 💰 ${Math.floor(upgrade.cost * 0.4).toLocaleString()}`}
                     </motion.button>
                   </motion.div>
                 )
@@ -678,7 +725,7 @@ function StatsPanel({ profile, onClose, onLogout }) {
         </div>
         <div className="space-y-3">
           {[
-            { bg: 'bg-yellow-50', icon: '🌸', label: 'PETALS BALANCE',      val: profile.petals.toLocaleString(),         color: 'text-yellow-600' },
+            { bg: 'bg-yellow-50', icon: '💰', label: 'GOLD BALANCE',         val: profile.petals.toLocaleString(),         color: 'text-yellow-600' },
             { bg: 'bg-green-50',  icon: '🌾', label: 'TOTAL HARVESTED',     val: profile.totalHarvested.toLocaleString(),  color: 'text-green-600'  },
             { bg: 'bg-blue-50',   icon: '💧', label: 'AUTO WATERERS',       val: `${profile.waterers} (${profile.autoHarvestCharges} charges)`, color: 'text-blue-600' },
             { bg: 'bg-amber-50',  icon: '🏠', label: 'HOUSE LEVEL',         val: profile.houseLevel === 0 ? 'None' : HOUSE_UPGRADES[profile.houseLevel - 1]?.name, color: 'text-amber-600' },
@@ -764,7 +811,7 @@ function HousePanel({ profile, onUpgrade, onClose }) {
                 disabled={profile.petals < nextUpgrade.cost}
                 className={`w-full font-bold py-2.5 rounded-xl text-sm ${profile.petals >= nextUpgrade.cost ? 'bg-amber-500 text-white shadow hover:bg-amber-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                 whileTap={profile.petals >= nextUpgrade.cost ? { scale: 0.97 } : {}}>
-                Upgrade — 🌸 {nextUpgrade.cost.toLocaleString()}
+                Upgrade — 💰 {nextUpgrade.cost.toLocaleString()}
               </motion.button>
             </div>
           </>
@@ -779,7 +826,7 @@ function HousePanel({ profile, onUpgrade, onClose }) {
             {HOUSE_UPGRADES.slice(currentLevel + 1).map(u => (
               <div key={u.level} className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 opacity-60">
                 <span>{u.emoji}</span>
-                <span className="text-sm text-gray-500">{u.name} — 🌸 {u.cost.toLocaleString()}</span>
+                <span className="text-sm text-gray-500">{u.name} — 💰 {u.cost.toLocaleString()}</span>
               </div>
             ))}
           </div>
@@ -835,7 +882,7 @@ function WardrobePanel({ profile, onPurchase, onEquip, onClose }) {
           </div>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-yellow-50 rounded-xl px-3 py-1.5">
-              <span>🌸</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
+              <span>💰</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
             </div>
             <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
           </div>
@@ -878,7 +925,7 @@ function WardrobePanel({ profile, onPurchase, onEquip, onClose }) {
                 {toolLocked && <div className="text-xs text-orange-500 mt-0.5">🏠 Lvl {item.houseReq} req</div>}
                 {!toolLocked && !isOwned && (
                   <div className={`text-xs mt-0.5 font-semibold ${canAfford ? 'text-green-600' : 'text-gray-400'}`}>
-                    🌸 {item.cost}
+                    💰 {item.cost}
                   </div>
                 )}
                 {equipped && <div className="text-xs text-purple-600 font-bold mt-0.5">✓ Equipped</div>}
@@ -993,22 +1040,31 @@ function FeedbackPanel({ onSubmit, onClose }) {
 // ─── Weapons & Armour panel ───────────────────────────────────────────────────
 function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEquipArmour, onBuyAxe, onEquipAxe, onClose }) {
   const [tab, setTab] = useState('weapons')
-  const shopRow = (item, equipped, owned, locked, canAfford, onBuy, onEquip, statLabel) => (
-    <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${equipped?'border-red-300 bg-red-50':locked?'border-gray-100 bg-gray-50':'border-gray-200 bg-white'}`}>
-      <span className="text-3xl">{item.emoji}</span>
-      <div className="flex-1">
-        <div className="font-bold text-gray-800">{item.name}</div>
-        <div className="text-xs text-gray-500">{statLabel}</div>
-        {locked && <div className="text-xs text-orange-500 mt-0.5">Requires {item.killsRequired} kills</div>}
+  const shopRow = (item, equipped, owned, locked, canAfford, onBuy, onEquip, statLabel) => {
+    const hasDiamond = !!item.diamondCost
+    const costLabel  = hasDiamond ? `💎 ${item.diamondCost}` : `💰 ${item.cost.toLocaleString()}`
+    const hasWood    = !!item.woodCost
+    return (
+      <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${equipped?'border-red-300 bg-red-50':locked?'border-gray-100 bg-gray-50':hasDiamond?'border-cyan-200 bg-cyan-50':'border-gray-200 bg-white'}`}>
+        <span className="text-3xl">{item.emoji}</span>
+        <div className="flex-1">
+          <div className="font-bold text-gray-800">{item.name}</div>
+          <div className="text-xs text-gray-500">{statLabel}</div>
+          {hasWood && !owned && <div className="text-xs text-amber-600 mt-0.5">🪵 {item.woodCost} wood required</div>}
+          {locked && <div className="text-xs text-orange-500 mt-0.5">Requires {item.killsRequired} kills</div>}
+          {hasDiamond && !locked && !owned && <div className="text-xs text-cyan-600 mt-0.5">💎 Diamond item</div>}
+        </div>
+        <motion.button onClick={() => owned ? onEquip(item) : onBuy(item)}
+          disabled={locked || (!owned && !canAfford)}
+          className={`text-xs font-bold px-3 py-1.5 rounded-xl ${equipped?'bg-red-100 text-red-700':locked?'bg-gray-100 text-gray-400 cursor-not-allowed':owned?'bg-gray-100 text-gray-700 hover:bg-gray-200':canAfford?(hasDiamond?'bg-cyan-500 text-white shadow':'bg-white border border-gray-200 shadow hover:shadow-md'):'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+          whileTap={owned||(!locked&&canAfford)?{scale:0.9}:{}}>
+          {equipped ? 'Equipped' : owned ? 'Equip' : locked ? 'Locked' : costLabel}
+        </motion.button>
       </div>
-      <motion.button onClick={() => owned ? onEquip(item) : onBuy(item)}
-        disabled={locked || (!owned && !canAfford)}
-        className={`text-xs font-bold px-3 py-1.5 rounded-xl ${equipped?'bg-red-100 text-red-700':locked?'bg-gray-100 text-gray-400 cursor-not-allowed':owned?'bg-gray-100 text-gray-700 hover:bg-gray-200':canAfford?'bg-white border border-gray-200 shadow hover:shadow-md':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
-        whileTap={owned||(!locked&&canAfford)?{scale:0.9}:{}}>
-        {equipped ? 'Equipped' : owned ? 'Equip' : locked ? 'Locked' : `🌸 ${item.cost.toLocaleString()}`}
-      </motion.button>
-    </div>
-  )
+    )
+  }
+  const swords = WEAPONS_SHOP.filter(w => w.range === 0)
+  const bows   = WEAPONS_SHOP.filter(w => w.range > 0)
   return (
     <motion.div className="fixed inset-0 z-40 flex items-end sm:items-center justify-center p-4"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
@@ -1021,9 +1077,15 @@ function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEqui
             <Sword size={20} className="text-red-500" />
             <h2 className="text-xl font-extrabold text-gray-800">Weapons & Axes</h2>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-yellow-50 rounded-xl px-3 py-1.5">
-              <span>🌸</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <div className="flex items-center gap-1 bg-yellow-50 rounded-xl px-2.5 py-1.5">
+              <span>💰</span><span className="font-bold text-yellow-600 text-sm">{profile.petals.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1 bg-amber-50 rounded-xl px-2.5 py-1.5">
+              <span>🪵</span><span className="font-bold text-amber-700 text-sm">{(profile.wood||0).toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1 bg-cyan-50 rounded-xl px-2.5 py-1.5">
+              <span>💎</span><span className="font-bold text-cyan-600 text-sm">{(profile.diamonds||0).toLocaleString()}</span>
             </div>
             <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
           </div>
@@ -1037,21 +1099,39 @@ function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEqui
           ))}
         </div>
         <div className="overflow-y-auto flex-1 p-3 space-y-2">
-          {tab === 'weapons' && WEAPONS_SHOP.map(item => {
-            const owned = !!(profile.ownedWeapons || {})[item.id]
-            const kills = (profile.zombieKills || 0)
-            const locked = !owned && kills < (item.killsRequired || 0)
-            return shopRow(item, profile.equippedWeapon === item.id, owned, locked, profile.petals >= item.cost, onBuyWeapon, onEquipWeapon, `⚔️ +${item.damage} dmg`)
-          })}
+          {tab === 'weapons' && (
+            <>
+              <div className="px-1 py-1"><p className="text-xs font-bold text-gray-500 uppercase tracking-wider">⚔️ Swords</p></div>
+              {swords.map(item => {
+                const owned  = !!(profile.ownedWeapons || {})[item.id]
+                const kills  = (profile.zombieKills || 0)
+                const locked = !owned && kills < (item.killsRequired || 0)
+                const canAfford = item.diamondCost ? (profile.diamonds||0) >= item.diamondCost : profile.petals >= item.cost
+                return shopRow(item, profile.equippedWeapon === item.id, owned, locked, canAfford, onBuyWeapon, onEquipWeapon, `⚔️ +${item.damage} dmg`)
+              })}
+              <div className="px-1 pt-2 pb-1"><p className="text-xs font-bold text-gray-500 uppercase tracking-wider">🏹 Bows</p></div>
+              {bows.map(item => {
+                const owned  = !!(profile.ownedWeapons || {})[item.id]
+                const kills  = (profile.zombieKills || 0)
+                const locked = !owned && kills < (item.killsRequired || 0)
+                const canAfford = item.diamondCost ? (profile.diamonds||0) >= item.diamondCost : profile.petals >= item.cost
+                return shopRow(item, profile.equippedWeapon === item.id, owned, locked, canAfford, onBuyWeapon, onEquipWeapon, `🏹 +${item.damage} dmg · range ${item.range}`)
+              })}
+            </>
+          )}
           {tab === 'armour' && ARMOUR_SHOP.map(item => {
             const owned = !!(profile.ownedArmour || {})[item.id]
             const locked = !owned && (profile.zombieKills || 0) < (item.killsRequired || 0)
-            return shopRow(item, profile.equippedArmour === item.id, owned, locked, profile.petals >= item.cost, onBuyArmour, onEquipArmour, `🛡️ +${item.defense} def`)
+            const woodOk = !item.woodCost || (profile.wood||0) >= item.woodCost
+            const canAfford = woodOk && (item.diamondCost ? (profile.diamonds||0) >= item.diamondCost : profile.petals >= item.cost)
+            return shopRow(item, profile.equippedArmour === item.id, owned, locked, canAfford, onBuyArmour, onEquipArmour, `🛡️ +${item.defense} def`)
           })}
           {tab === 'axes' && AXES_SHOP.map(item => {
             const owned = !!(profile.ownedAxes || {})[item.id]
             const locked = !owned && (profile.zombieKills || 0) < (item.killsRequired || 0)
-            return shopRow(item, profile.equippedAxe === item.id, owned, locked, profile.petals >= item.cost, onBuyAxe, onEquipAxe, `🪓 ${item.chopDamage} chop dmg`)
+            const woodOk = !item.woodCost || (profile.wood||0) >= item.woodCost
+            const canAfford = woodOk && (item.diamondCost ? (profile.diamonds||0) >= item.diamondCost : profile.petals >= item.cost)
+            return shopRow(item, profile.equippedAxe === item.id, owned, locked, canAfford, onBuyAxe, onEquipAxe, `🪓 ${item.chopDamage} chop dmg`)
           })}
         </div>
       </motion.div>
@@ -1075,7 +1155,10 @@ function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onClose }) {
           <h2 className="text-xl font-extrabold text-gray-800">🔨 Carpentry</h2>
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-yellow-50 rounded-xl px-3 py-1.5">
-              <span>🌸</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
+              <span>💰</span><span className="font-bold text-yellow-600">{profile.petals.toLocaleString()}</span>
+            </div>
+            <div className="flex items-center gap-1 bg-amber-50 rounded-xl px-2.5 py-1.5">
+              <span>🪵</span><span className="font-bold text-amber-700">{(profile.wood||0).toLocaleString()}</span>
             </div>
             <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
           </div>
@@ -1107,7 +1190,7 @@ function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onClose }) {
                     disabled={profile.petals < nextUpgrade.cost}
                     className={`w-full font-bold py-2.5 rounded-xl text-sm ${profile.petals >= nextUpgrade.cost ? 'bg-amber-500 text-white' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                     whileTap={profile.petals >= nextUpgrade.cost ? { scale: 0.97 } : {}}>
-                    Upgrade — 🌸 {nextUpgrade.cost.toLocaleString()}
+                    Upgrade — 💰 {nextUpgrade.cost.toLocaleString()}
                   </motion.button>
                 </div>
               ) : (
@@ -1116,20 +1199,22 @@ function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onClose }) {
             </>
           )}
           {tab === 'sawmill' && SAWMILL_UPGRADES.map(item => {
-            const owned = !!(profile.sawmillUpgrades || {})[item.id]
-            const canAfford = profile.petals >= item.cost
+            const owned      = !!(profile.sawmillUpgrades || {})[item.id]
+            const hasDiamond = !!item.diamondCost
+            const canAfford  = hasDiamond ? (profile.diamonds||0) >= item.diamondCost : profile.petals >= item.cost
             return (
-              <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${owned?'border-amber-300 bg-amber-50':'border-gray-200 bg-white'}`}>
+              <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${owned?'border-amber-300 bg-amber-50':hasDiamond?'border-cyan-200 bg-cyan-50':'border-gray-200 bg-white'}`}>
                 <span className="text-3xl">{item.emoji}</span>
                 <div className="flex-1">
                   <div className="font-bold text-gray-800">{item.name}</div>
                   <div className="text-xs text-gray-500">{item.description}</div>
+                  {hasDiamond && !owned && <div className="text-xs text-cyan-600 mt-0.5">💎 Diamond item</div>}
                 </div>
                 <motion.button onClick={() => !owned && onBuySawmill(item)}
                   disabled={owned || !canAfford}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${owned?'bg-amber-100 text-amber-700':canAfford?'bg-white border border-gray-200 shadow':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                  className={`text-xs font-bold px-3 py-1.5 rounded-xl ${owned?'bg-amber-100 text-amber-700':canAfford?(hasDiamond?'bg-cyan-500 text-white shadow':'bg-white border border-gray-200 shadow'):'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                   whileTap={!owned && canAfford ? { scale: 0.9 } : {}}>
-                  {owned ? 'Built' : `🌸 ${item.cost.toLocaleString()}`}
+                  {owned ? 'Built' : hasDiamond ? `💎 ${item.diamondCost}` : `💰 ${item.cost.toLocaleString()}`}
                 </motion.button>
               </div>
             )
@@ -1175,13 +1260,13 @@ function PotionsPanel({ profile, playerHp, maxHp, onBuyPotion, onClose }) {
                   disabled={!canAfford || full}
                   className={`text-xs font-bold px-3 py-1.5 rounded-xl ${full?'bg-gray-100 text-gray-400 cursor-not-allowed':canAfford?'bg-purple-500 text-white shadow hover:bg-purple-600':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                   whileTap={canAfford&&!full?{scale:0.9}:{}}>
-                  {full ? 'Full HP' : `🌸 ${item.cost}`}
+                  {full ? 'Full HP' : `💰 ${item.cost}`}
                 </motion.button>
               </div>
             )
           })}
         </div>
-        <div className="mt-3 text-center text-xs text-gray-400">🌸 {profile.petals.toLocaleString()} available</div>
+        <div className="mt-3 text-center text-xs text-gray-400">💰 {profile.petals.toLocaleString()} available</div>
       </motion.div>
     </motion.div>
   )
@@ -1266,12 +1351,54 @@ function CastleUpgradePanel({ profile, onBuyUpgrade, onClose }) {
                   disabled={owned || locked || !canAfford}
                   className={`text-xs font-bold px-3 py-1.5 rounded-xl ${owned ? 'bg-green-100 text-green-700' : locked ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : canAfford ? 'bg-amber-500 text-white shadow hover:bg-amber-600' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
                   whileTap={!owned && !locked && canAfford ? { scale: 0.9 } : {}}>
-                  {owned ? '✓ Built' : locked ? '🔒' : `🌸 ${upgrade.cost.toLocaleString()}`}
+                  {owned ? '✓ Built' : locked ? '🔒' : `💰 ${upgrade.cost.toLocaleString()}`}
                 </motion.button>
               </div>
             )
           })}
         </div>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ─── Diamond Shop panel ───────────────────────────────────────────────────────
+function DiamondShopPanel({ profile, onBuy, onClose }) {
+  return (
+    <motion.div className="fixed inset-0 z-40 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <motion.div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm p-6 overflow-y-auto max-h-[90vh]"
+        initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">💎</span>
+            <h2 className="text-xl font-extrabold text-gray-800">Diamond Shop</h2>
+          </div>
+          <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
+        </div>
+        <div className="bg-cyan-50 border border-cyan-200 rounded-2xl p-3 mb-4 text-center">
+          <p className="text-sm font-bold text-cyan-700">💎 Your Diamonds: {(profile.diamonds||0).toLocaleString()}</p>
+          <p className="text-xs text-cyan-500 mt-0.5">Use diamonds to buy top-tier upgrades!</p>
+        </div>
+        <div className="space-y-3">
+          {DIAMOND_PACKS.map(pack => (
+            <div key={pack.id} className="flex items-center gap-3 p-3 rounded-2xl border-2 border-cyan-200 bg-cyan-50">
+              <span className="text-3xl">{pack.emoji}</span>
+              <div className="flex-1">
+                <div className="font-bold text-gray-800">{pack.name}</div>
+                <div className="text-sm text-cyan-600 font-bold">+{pack.amount} 💎 Diamonds</div>
+              </div>
+              <motion.button onClick={() => onBuy(pack)}
+                className="text-xs font-bold px-3 py-2 rounded-xl bg-cyan-500 text-white shadow hover:bg-cyan-600"
+                whileTap={{ scale: 0.93 }}>
+                {pack.price}
+              </motion.button>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400 text-center mt-4">Demo mode — purchases grant diamonds instantly.</p>
       </motion.div>
     </motion.div>
   )
@@ -1300,6 +1427,14 @@ export default function App() {
   const [npcDialog, setNpcDialog]     = useState(null)   // npc id showing dialog
   const [nearNpcId, setNearNpcId]     = useState(null)
   const [equipSource, setEquipSource] = useState('sword')  // 'sword' | 'bow' | 'axe' | 'seeds'
+  const [showDiamondShop, setShowDiamondShop] = useState(false)
+  // Music system
+  const [musicMuted, setMusicMuted] = useState(false)
+  const musicAudioRef  = useRef(null)
+  const musicTrackRef  = useRef(0)
+  const musicStarted   = useRef(false)
+  const equipSourceRef = useRef('sword')
+  useEffect(() => { equipSourceRef.current = equipSource }, [equipSource])
   const [cycleProgress, setCycleProgress] = useState(0)    // 0-1 progress within current phase
   const [respawnSignal, setRespawnSignal] = useState(0)    // increments to trigger Garden3D respawn
   const dayTimerRef  = useRef(0)
@@ -1341,6 +1476,37 @@ export default function App() {
       if (apiAvailable) apiSave(profile.username, profile)
     }, 2000)
   }, [profile])
+
+  // ── Music player ──────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (MUSIC_TRACKS.length === 0) return
+    const startMusic = () => {
+      if (musicStarted.current) return
+      musicStarted.current = true
+      const audio = new Audio(MUSIC_TRACKS[0].src)
+      audio.volume = 0.35
+      musicAudioRef.current = audio
+      audio.addEventListener('ended', () => {
+        musicTrackRef.current = (musicTrackRef.current + 1) % MUSIC_TRACKS.length
+        audio.src = MUSIC_TRACKS[musicTrackRef.current].src
+        if (!musicMuted) audio.play().catch(() => {})
+      })
+      if (!musicMuted) audio.play().catch(() => {})
+    }
+    window.addEventListener('click', startMusic, { once: true })
+    window.addEventListener('keydown', startMusic, { once: true })
+    return () => {
+      window.removeEventListener('click', startMusic)
+      window.removeEventListener('keydown', startMusic)
+    }
+  }, [])
+
+  useEffect(() => {
+    const audio = musicAudioRef.current
+    if (!audio) return
+    if (musicMuted) audio.pause()
+    else audio.play().catch(() => {})
+  }, [musicMuted])
 
   // ── Auto-waterer ticker (task 6: uses charges) ────────────────────────────
   useEffect(() => {
@@ -1488,7 +1654,7 @@ export default function App() {
         petals: prev.petals + killReward,
         zombieKills: (prev.zombieKills || 0) + 1,
       }) : prev)
-      showToast(`Zombie slain! +${killReward} 🌸`)
+      showToast(`Zombie slain! +${killReward} 💰`)
       return
     }
 
@@ -1499,7 +1665,7 @@ export default function App() {
         ...prev,
         petals: prev.petals + clearReward,
       }) : prev)
-      showToast(`Forest cleared! +${clearReward} 🌸`)
+      showToast(`Forest cleared! +${clearReward} 💰`)
       return
     }
 
@@ -1574,8 +1740,8 @@ export default function App() {
       }
       // Task 3: number keys select hotbar slot
       if (e.key === '1') setEquipSource('sword')
-      else if (e.key === '2') setEquipSource('axe')
-      else if (e.key === '3') setEquipSource('bow')
+      else if (e.key === '2') setEquipSource('bow')
+      else if (e.key === '3') setEquipSource('axe')
       else if (e.key === '4') setEquipSource('seeds')
     }
     window.addEventListener('keydown', handleKey)
@@ -1584,7 +1750,13 @@ export default function App() {
 
   const handleBuyWeapon = useCallback((item) => {
     setProfile(prev => {
-      if (!prev || prev.petals < item.cost) { showToast('Not enough petals!'); return prev }
+      if (!prev) return prev
+      if (item.diamondCost) {
+        if ((prev.diamonds||0) < item.diamondCost) { showToast('Not enough diamonds! 💎'); return prev }
+        showToast(`${item.emoji} ${item.name} bought and equipped!`)
+        return { ...prev, diamonds: (prev.diamonds||0) - item.diamondCost, ownedWeapons: { ...prev.ownedWeapons, [item.id]: true }, equippedWeapon: item.id }
+      }
+      if (prev.petals < item.cost) { showToast('Not enough gold!'); return prev }
       showToast(`${item.emoji} ${item.name} bought and equipped!`)
       return { ...prev, petals: prev.petals - item.cost, ownedWeapons: { ...prev.ownedWeapons, [item.id]: true }, equippedWeapon: item.id }
     })
@@ -1596,9 +1768,16 @@ export default function App() {
 
   const handleBuyArmour = useCallback((item) => {
     setProfile(prev => {
-      if (!prev || prev.petals < item.cost) { showToast('Not enough petals!'); return prev }
+      if (!prev) return prev
+      if (item.woodCost && (prev.wood || 0) < item.woodCost) { showToast(`Not enough wood! Need 🪵 ${item.woodCost}`); return prev }
+      if (item.diamondCost) {
+        if ((prev.diamonds||0) < item.diamondCost) { showToast('Not enough diamonds! 💎'); return prev }
+        showToast(`${item.emoji} ${item.name} bought and equipped!`)
+        return { ...prev, diamonds: (prev.diamonds||0) - item.diamondCost, wood: (prev.wood||0) - (item.woodCost||0), ownedArmour: { ...prev.ownedArmour, [item.id]: true }, equippedArmour: item.id }
+      }
+      if (prev.petals < item.cost) { showToast('Not enough gold!'); return prev }
       showToast(`${item.emoji} ${item.name} bought and equipped!`)
-      return { ...prev, petals: prev.petals - item.cost, ownedArmour: { ...prev.ownedArmour, [item.id]: true }, equippedArmour: item.id }
+      return { ...prev, petals: prev.petals - item.cost, wood: (prev.wood||0) - (item.woodCost||0), ownedArmour: { ...prev.ownedArmour, [item.id]: true }, equippedArmour: item.id }
     })
   }, [showToast])
 
@@ -1608,7 +1787,7 @@ export default function App() {
 
   const handleBuyPotion = useCallback((item) => {
     setProfile(prev => {
-      if (!prev || prev.petals < item.cost) { showToast('Not enough petals!'); return prev }
+      if (!prev || prev.petals < item.cost) { showToast('Not enough gold!'); return prev }
       setPlayerHp(hp => Math.min(10, hp + item.hp))
       showToast(`+${item.hp} HP restored! 🧪`)
       return { ...prev, petals: prev.petals - item.cost }
@@ -1617,9 +1796,16 @@ export default function App() {
 
   const handleBuyAxe = useCallback((item) => {
     setProfile(prev => {
-      if (!prev || prev.petals < item.cost) { showToast('Not enough petals!'); return prev }
+      if (!prev) return prev
+      if (item.woodCost && (prev.wood || 0) < item.woodCost) { showToast(`Not enough wood! Need 🪵 ${item.woodCost}`); return prev }
+      if (item.diamondCost) {
+        if ((prev.diamonds||0) < item.diamondCost) { showToast('Not enough diamonds! 💎'); return prev }
+        showToast(`${item.emoji} ${item.name} bought and equipped!`)
+        return { ...prev, diamonds: (prev.diamonds||0) - item.diamondCost, wood: (prev.wood||0) - (item.woodCost||0), ownedAxes: { ...prev.ownedAxes, [item.id]: true }, equippedAxe: item.id }
+      }
+      if (prev.petals < item.cost) { showToast('Not enough gold!'); return prev }
       showToast(`${item.emoji} ${item.name} bought and equipped!`)
-      return { ...prev, petals: prev.petals - item.cost, ownedAxes: { ...prev.ownedAxes, [item.id]: true }, equippedAxe: item.id }
+      return { ...prev, petals: prev.petals - item.cost, wood: (prev.wood||0) - (item.woodCost||0), ownedAxes: { ...prev.ownedAxes, [item.id]: true }, equippedAxe: item.id }
     })
   }, [showToast])
 
@@ -1629,33 +1815,59 @@ export default function App() {
 
   const handleBuySawmill = useCallback((item) => {
     setProfile(prev => {
-      if (!prev || prev.petals < item.cost) { showToast('Not enough petals!'); return prev }
+      if (!prev) return prev
       if ((prev.sawmillUpgrades || {})[item.id]) return prev
+      if (item.diamondCost) {
+        if ((prev.diamonds||0) < item.diamondCost) { showToast('Not enough diamonds! 💎'); return prev }
+        showToast(`${item.emoji} ${item.name} built!`)
+        return { ...prev, diamonds: (prev.diamonds||0) - item.diamondCost, sawmillUpgrades: { ...prev.sawmillUpgrades, [item.id]: true } }
+      }
+      if (prev.petals < item.cost) { showToast('Not enough gold!'); return prev }
       showToast(`${item.emoji} ${item.name} built!`)
       return { ...prev, petals: prev.petals - item.cost, sawmillUpgrades: { ...prev.sawmillUpgrades, [item.id]: true } }
     })
   }, [showToast])
 
-  const handleBuyFertUpgrade = useCallback(() => {
+  const handleBuyFertUpgrade = useCallback((tierIdx) => {
     setProfile(prev => {
       if (!prev) return prev
-      const tier = prev.fertilizerTier || 0
-      const upgrade = FERTILIZER_UPGRADES[tier]
-      if (!upgrade) { showToast('Fertilizer already at max level! 👑'); return prev }
-      if (prev.petals < upgrade.cost) { showToast('Not enough petals! 🌸'); return prev }
-      showToast(`${upgrade.emoji} ${upgrade.name} unlocked! Plants grow ${upgrade.speedMult}× faster!`)
-      return { ...prev, petals: prev.petals - upgrade.cost, fertilizerTier: tier + 1 }
+      const upgrade = FERTILIZER_UPGRADES[tierIdx]
+      if (!upgrade) return prev
+      const currentTier = prev.fertilizerTier || 0
+      const isUnlocking = tierIdx === currentTier  // unlocking next tier
+      const isRecharging = tierIdx < currentTier    // recharging already-unlocked tier
+      // task 4 (file): block recharging superseded non-diamond tiers
+      const isSuperseded = !upgrade.diamondCost && isRecharging && currentTier > tierIdx + 1
+      if (isSuperseded) { showToast('Upgrade to a higher fertilizer tier first!'); return prev }
+
+      if (upgrade.diamondCost) {
+        if ((prev.diamonds||0) < upgrade.diamondCost) { showToast('Not enough diamonds! 💎'); return prev }
+        showToast(`${upgrade.emoji} ${upgrade.name}! +100 plant charges`)
+        return { ...prev, diamonds: (prev.diamonds||0) - upgrade.diamondCost, fertilizerTier: Math.max(currentTier, tierIdx+1), fertilizerCharges: (prev.fertilizerCharges||0) + 100 }
+      }
+
+      if (isUnlocking) {
+        if (prev.petals < upgrade.cost) { showToast('Not enough gold!'); return prev }
+        showToast(`${upgrade.emoji} ${upgrade.name} unlocked! +100 plant charges (${upgrade.speedMult}×)`)
+        return { ...prev, petals: prev.petals - upgrade.cost, fertilizerTier: tierIdx + 1, fertilizerCharges: (prev.fertilizerCharges||0) + 100 }
+      } else if (isRecharging) {
+        const rechargeCost = Math.floor(upgrade.cost * 0.4)
+        if (prev.petals < rechargeCost) { showToast('Not enough gold!'); return prev }
+        showToast(`${upgrade.emoji} Recharged! +100 more plants at ${upgrade.speedMult}×`)
+        return { ...prev, petals: prev.petals - rechargeCost, fertilizerTier: tierIdx + 1, fertilizerCharges: (prev.fertilizerCharges||0) + 100 }
+      }
+      return prev
     })
   }, [showToast])
 
-  const handleTreeChopped = useCallback((baseReward) => {
+  const handleTreeChopped = useCallback((baseWood) => {
     setProfile(prev => {
       if (!prev) return prev
       const ownedUpgrades = prev.sawmillUpgrades || {}
       const mult = SAWMILL_UPGRADES.reduce((m, u) => ownedUpgrades[u.id] ? u.woodMult : m, 1)
-      const reward = Math.floor(baseReward * mult)
-      showToast(`🪵 Tree chopped! +${reward} 🌸`)
-      return { ...prev, petals: prev.petals + reward }
+      const wood = Math.floor(baseWood * mult)
+      showToast(`🪵 Tree chopped! +${wood} wood`)
+      return { ...prev, wood: (prev.wood || 0) + wood }
     })
   }, [showToast])
 
@@ -1665,7 +1877,7 @@ export default function App() {
 
   const handleBuyCastleUpgrade = useCallback((upgrade) => {
     setProfile(prev => {
-      if (!prev || prev.petals < upgrade.cost) { showToast('Not enough petals!'); return prev }
+      if (!prev || prev.petals < upgrade.cost) { showToast('Not enough gold!'); return prev }
       if ((prev.castleUpgrades || {})[upgrade.id]) return prev
       showToast(`Castle upgraded: ${upgrade.name}! 🏰`)
       return { ...prev, petals: prev.petals - upgrade.cost, castleUpgrades: { ...prev.castleUpgrades, [upgrade.id]: true } }
@@ -1690,12 +1902,13 @@ export default function App() {
         const reward   = Math.floor(plant.reward * bonus)
         const newPlots = [...prev.plots]
         newPlots[index] = null
-        showToast(`+${reward.toLocaleString()} 🌸 ${plant.name} harvested!`)
+        showToast(`+${reward.toLocaleString()} 💰 ${plant.name} harvested!`)
         playCrunchSound()
         return { ...prev, petals: prev.petals + reward, totalHarvested: prev.totalHarvested + reward, plots: newPlots }
       }
 
       if (!plot && selectedSeed) {
+        if (equipSourceRef.current !== 'seeds') return prev  // only plant in seeds mode
         const p = PLANTS[selectedSeed]
         if (!p) return prev
         const owned      = prev.ownedSeeds[selectedSeed] || 0
@@ -1703,15 +1916,19 @@ export default function App() {
         if (!isUnlocked) { showToast(`Unlock ${p.name} in the shop first! 🔒`); return prev }
         if (p.seedCost > 0 && owned === 0) { showToast(`No ${p.name} seeds! Buy from the shop.`); return prev }
 
-        const permSpeedMult = FERTILIZER_UPGRADES[Math.max(0, (prev.fertilizerTier || 1) - 1)]?.speedMult || 1
-        const speedMult = (prev.hasFertilizer ? 0.5 : 1) * ((prev.houseLevel || 0) >= 1 ? 0.9 : 1) / (prev.fertilizerTier > 0 ? permSpeedMult : 1)
+        const fertCharges   = prev.fertilizerCharges || 0
+        const fertTier      = prev.fertilizerTier || 0
+        const permSpeedMult = (fertTier > 0 && fertCharges > 0)
+          ? (FERTILIZER_UPGRADES[fertTier - 1]?.speedMult || 1) : 1
+        const speedMult = (prev.hasFertilizer ? 0.5 : 1) * ((prev.houseLevel || 0) >= 1 ? 0.9 : 1) / permSpeedMult
         const totalGrowTime = p.growTime * speedMult
         const newPlots = [...prev.plots]
         newPlots[index] = { seedId: selectedSeed, state: 'growing', elapsed: 0, totalGrowTime, savedAt: Date.now() }
         const newOwned = { ...prev.ownedSeeds }
         if (p.seedCost > 0) newOwned[selectedSeed] = Math.max(0, owned - 1)
+        const newCharges = fertTier > 0 && fertCharges > 0 ? Math.max(0, fertCharges - 1) : fertCharges
         playCrunchSound()
-        return { ...prev, plots: newPlots, ownedSeeds: newOwned, hasFertilizer: false }
+        return { ...prev, plots: newPlots, ownedSeeds: newOwned, hasFertilizer: false, fertilizerCharges: newCharges }
       }
       return prev
     })
@@ -1733,6 +1950,16 @@ export default function App() {
   const handleUnlock = useCallback((plantId) => {
     const plant = PLANTS[plantId]
     if (!plant) return
+    if (plant.diamondUnlockCost) {
+      // diamond-gated seed
+      setProfile(prev => {
+        if (!prev || (prev.diamonds || 0) < plant.diamondUnlockCost) { showToast('Not enough diamonds! 💎'); return prev }
+        if ((prev.unlockedPlants || []).includes(plantId)) return prev
+        showToast(`🔓 ${plant.name} unlocked! You can now buy seeds.`)
+        return { ...prev, diamonds: (prev.diamonds||0) - plant.diamondUnlockCost, unlockedPlants: [...(prev.unlockedPlants || []), plantId] }
+      })
+      return
+    }
     setProfile(prev => {
       if (!prev || prev.petals < plant.unlockCost) return prev
       if ((prev.unlockedPlants || []).includes(plantId)) return prev
@@ -1802,7 +2029,7 @@ export default function App() {
   // ── Wardrobe purchase (task 3/5) ───────────────────────────────────────────
   const handleWardrobePurchase = useCallback((category, item) => {
     setProfile(prev => {
-      if (!prev || prev.petals < item.cost) { showToast('Not enough petals! 🌸'); return prev }
+      if (!prev || prev.petals < item.cost) { showToast('Not enough gold!'); return prev }
       const newOwned = { ...prev.wardrobeOwned, [item.id]: true }
       // Auto-equip after purchase
       const newOutfit = { ...prev.outfit }
@@ -1812,6 +2039,15 @@ export default function App() {
       if (category === 'tools')  newOutfit.toolId     = item.id
       showToast(`Bought & equipped ${item.name}! 🎉`)
       return { ...prev, petals: prev.petals - item.cost, wardrobeOwned: newOwned, outfit: newOutfit }
+    })
+  }, [showToast])
+
+  // ── Diamond shop purchase ──────────────────────────────────────────────────
+  const handleBuyDiamondPack = useCallback((pack) => {
+    setProfile(prev => {
+      if (!prev) return prev
+      showToast(`+${pack.amount} 💎 Diamonds added!`)
+      return { ...prev, diamonds: (prev.diamonds || 0) + pack.amount }
     })
   }, [showToast])
 
@@ -1874,7 +2110,7 @@ export default function App() {
         equipSource={equipSource}
         chopDamage={chopDamage}
         onTreeChopped={handleTreeChopped}
-        treeBaseReward={TREE_BASE_REWARD}
+        treeBaseReward={TREE_BASE_WOOD}
         respawnSignal={respawnSignal}
         onMessage={showToast}
         shopOpen={!!(castleShop || npcDialog)}
@@ -1969,6 +2205,13 @@ export default function App() {
             onClose={() => setShowCastle(false)} />
         )}
       </AnimatePresence>
+      <AnimatePresence>
+        {showDiamondShop && (
+          <DiamondShopPanel profile={profile}
+            onBuy={handleBuyDiamondPack}
+            onClose={() => setShowDiamondShop(false)} />
+        )}
+      </AnimatePresence>
 
       {/* Toast */}
       <AnimatePresence>
@@ -2045,15 +2288,39 @@ export default function App() {
               </div>
             </div>
             <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur border border-yellow-200 rounded-2xl px-3 py-2 shadow">
-              <span>🌸</span>
+              <span>💰</span>
               <span className="font-extrabold text-yellow-600 text-lg">{profile.petals.toLocaleString()}</span>
             </div>
+            {(profile.wood || 0) > 0 && (
+              <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur border border-amber-200 rounded-2xl px-3 py-2 shadow">
+                <span>🪵</span>
+                <span className="font-extrabold text-amber-700 text-sm">{(profile.wood || 0).toLocaleString()}</span>
+              </div>
+            )}
+            {(profile.diamonds || 0) > 0 && (
+              <div className="flex items-center gap-1.5 bg-white/80 backdrop-blur border border-cyan-200 rounded-2xl px-3 py-2 shadow">
+                <span>💎</span>
+                <span className="font-extrabold text-cyan-600 text-sm">{(profile.diamonds || 0).toLocaleString()}</span>
+              </div>
+            )}
             {profile.waterers > 0 && (
               <div className="flex items-center gap-1 bg-white/80 backdrop-blur border border-blue-200 rounded-2xl px-2.5 py-2 shadow">
                 <span className="text-sm">💧</span>
                 <span className="text-xs font-bold text-blue-500">{profile.autoHarvestCharges}</span>
               </div>
             )}
+            {/* Diamond shop button */}
+            <motion.button onClick={() => setShowDiamondShop(true)}
+              className="bg-white/80 backdrop-blur border border-cyan-200 rounded-2xl p-2 shadow text-cyan-500 hover:text-cyan-700"
+              whileTap={{ scale: 0.9 }} title="Buy Diamonds">
+              <span className="text-lg">💎</span>
+            </motion.button>
+            {/* Music toggle button */}
+            <motion.button onClick={() => setMusicMuted(m => !m)}
+              className="bg-white/80 backdrop-blur border border-purple-200 rounded-2xl p-2 shadow text-purple-500 hover:text-purple-700"
+              whileTap={{ scale: 0.9 }} title={musicMuted ? 'Unmute music' : 'Mute music'}>
+              <span className="text-lg">{musicMuted ? '🔇' : '🎵'}</span>
+            </motion.button>
             {/* Ad button */}
             <motion.button onClick={() => adReady && setShowAd(true)}
               disabled={!adReady}
@@ -2100,29 +2367,43 @@ export default function App() {
         <div className="flex flex-col gap-1.5">
           {/* Mode tabs */}
           <div className="bg-white/80 backdrop-blur rounded-2xl p-1.5 shadow flex gap-1.5 items-center justify-center">
-            {[
-              { key: 'sword', label: 'Sword', emoji: '⚔️',  color: 'red'   },
-              { key: 'bow',   label: 'Bow',   emoji: '🏹',  color: 'amber' },
-              { key: 'axe',   label: 'Axe',   emoji: '🪓',  color: 'orange'},
-              { key: 'seeds', label: 'Seeds', emoji: '🌱',  color: 'green' },
-            ].map(({ key, label, emoji, color }) => {
-              const active = equipSource === key
-              const colorMap = {
-                red:    active ? 'border-red-400 bg-red-50 text-red-700'       : 'border-gray-200 bg-white text-gray-500 hover:border-red-200',
-                amber:  active ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-gray-500 hover:border-amber-200',
-                orange: active ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-500 hover:border-orange-200',
-                green:  active ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-500 hover:border-green-200',
-              }
-              return (
-                <motion.button key={key}
-                  onClick={() => setEquipSource(key)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${colorMap[color]}`}
-                  whileTap={{ scale: 0.92 }}>
-                  <span>{emoji}</span>
-                  <span className="hidden sm:inline">{label}</span>
-                </motion.button>
-              )
-            })}
+            {(() => {
+              const hasSword = Object.keys(profile.ownedWeapons || {}).some(id => WEAPONS_SHOP.find(w => w.id === id && w.range === 0))
+              const hasBow   = Object.keys(profile.ownedWeapons || {}).some(id => WEAPONS_SHOP.find(w => w.id === id && w.range > 0))
+              const hasAxe   = Object.keys(profile.ownedAxes || {}).length > 0
+              return [
+                { key: 'sword', label: 'Sword', emoji: '⚔️',  color: 'red',    unlocked: hasSword },
+                { key: 'bow',   label: 'Bow',   emoji: '🏹',  color: 'amber',  unlocked: hasBow   },
+                { key: 'axe',   label: 'Axe',   emoji: '🪓',  color: 'orange', unlocked: hasAxe   },
+                { key: 'seeds', label: 'Seeds', emoji: '🌱',  color: 'green',  unlocked: true     },
+              ].map(({ key, label, emoji, color, unlocked }) => {
+                const active = equipSource === key
+                const colorMap = {
+                  red:    active ? 'border-red-400 bg-red-50 text-red-700'       : 'border-gray-200 bg-white text-gray-500 hover:border-red-200',
+                  amber:  active ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-gray-500 hover:border-amber-200',
+                  orange: active ? 'border-orange-400 bg-orange-50 text-orange-700' : 'border-gray-200 bg-white text-gray-500 hover:border-orange-200',
+                  green:  active ? 'border-green-400 bg-green-50 text-green-700' : 'border-gray-200 bg-white text-gray-500 hover:border-green-200',
+                }
+                if (!unlocked) {
+                  return (
+                    <div key={key} title={`Buy a ${label} first`}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 border-gray-100 bg-gray-50 text-gray-300 text-sm font-bold cursor-not-allowed opacity-50">
+                      <span>{emoji}</span>
+                      <span className="hidden sm:inline">{label}</span>
+                    </div>
+                  )
+                }
+                return (
+                  <motion.button key={key}
+                    onClick={() => setEquipSource(key)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border-2 text-sm font-bold transition-all ${colorMap[color]}`}
+                    whileTap={{ scale: 0.92 }}>
+                    <span>{emoji}</span>
+                    <span className="hidden sm:inline">{label}</span>
+                  </motion.button>
+                )
+              })
+            })()}
           </div>
           {/* Seed sub-bar — only visible in seeds mode */}
           {equipSource === 'seeds' && (

@@ -1,1 +1,1 @@
-1: make pressing "3" select the axe, and pressing "2" select the bow.
+1: implemetn

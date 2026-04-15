@@ -1619,12 +1619,58 @@ function CastleCity({ gateHp = GATE_MAX_HP }) {
       {CASTLE_NPCS.map(npc => (
         <NpcCharacter key={npc.id} npc={npc}/>
       ))}
+
+      {/* Wall-top fence — prevents player from walking off walls (task 4) */}
+      {/* Front wall outer fence (two halves, excluding gate opening) */}
+      {[-10,-8,-6,-4].map((xp, i) => (
+        <mesh key={`ffl${i}`} position={[xp, wallH + 0.25, 12.25]} castShadow>
+          <boxGeometry args={[0.12, 0.5, 0.12]}/><meshLambertMaterial color="#b45309"/>
+        </mesh>
+      ))}
+      <mesh position={[-7, wallH + 0.38, 12.25]}>
+        <boxGeometry args={[6.5, 0.07, 0.07]}/><meshLambertMaterial color="#d97706"/>
+      </mesh>
+      {[4,6,8,10].map((xp, i) => (
+        <mesh key={`ffr${i}`} position={[xp, wallH + 0.25, 12.25]} castShadow>
+          <boxGeometry args={[0.12, 0.5, 0.12]}/><meshLambertMaterial color="#b45309"/>
+        </mesh>
+      ))}
+      <mesh position={[7, wallH + 0.38, 12.25]}>
+        <boxGeometry args={[6.5, 0.07, 0.07]}/><meshLambertMaterial color="#d97706"/>
+      </mesh>
+      {/* Back wall outer fence */}
+      {[-10,-8,-6,-4,-2,0,2,4,6,8,10].map((xp, i) => (
+        <mesh key={`bfp${i}`} position={[xp, wallH + 0.25, 32.25]} castShadow>
+          <boxGeometry args={[0.12, 0.5, 0.12]}/><meshLambertMaterial color="#b45309"/>
+        </mesh>
+      ))}
+      <mesh position={[0, wallH + 0.38, 32.25]}>
+        <boxGeometry args={[22, 0.07, 0.07]}/><meshLambertMaterial color="#d97706"/>
+      </mesh>
+      {/* Left wall outer fence */}
+      {[15,17,19,21,23,25,27,29,31].map((zp, i) => (
+        <mesh key={`lfp${i}`} position={[-12.75, wallH + 0.25, zp]} castShadow>
+          <boxGeometry args={[0.12, 0.5, 0.12]}/><meshLambertMaterial color="#b45309"/>
+        </mesh>
+      ))}
+      <mesh position={[-12.75, wallH + 0.38, 22.25]}>
+        <boxGeometry args={[0.07, 0.07, 18.5]}/><meshLambertMaterial color="#d97706"/>
+      </mesh>
+      {/* Right wall outer fence */}
+      {[15,17,19,21,23,25,27,29,31].map((zp, i) => (
+        <mesh key={`rfp${i}`} position={[12.75, wallH + 0.25, zp]} castShadow>
+          <boxGeometry args={[0.12, 0.5, 0.12]}/><meshLambertMaterial color="#b45309"/>
+        </mesh>
+      ))}
+      <mesh position={[12.75, wallH + 0.38, 22.25]}>
+        <boxGeometry args={[0.07, 0.07, 18.5]}/><meshLambertMaterial color="#d97706"/>
+      </mesh>
     </group>
   )
 }
 
 // ─── Zombie ───────────────────────────────────────────────────────────────────
-function ZombieBody({ zombie, hp, meshMapRef, legMapRef, hpBarMapRef }) {
+function ZombieBody({ zombie, hp, meshMapRef, legMapRef, hpBarMapRef, onAttack }) {
   const ref         = useRef()
   const leftLegRef  = useRef()
   const rightLegRef = useRef()
@@ -1652,7 +1698,7 @@ function ZombieBody({ zombie, hp, meshMapRef, legMapRef, hpBarMapRef }) {
   if (hp <= 0) return null
 
   return (
-    <group ref={ref} position={[zombie.x, 0, zombie.z]}>
+    <group ref={ref} position={[zombie.x, 0, zombie.z]} onClick={onAttack ? (e) => { e.stopPropagation(); onAttack(zombie.id) } : undefined}>
       {/* Legs */}
       <group ref={leftLegRef} position={[-0.12, 0.28, 0]}>
         <mesh castShadow>
@@ -1812,22 +1858,30 @@ const CASTLE_WALL_T       =  0.4   // half-thickness + player radius buffer
 // ─── Ramp constants ───────────────────────────────────────────────────────────
 const RAMP_X_MIN = 10.0, RAMP_X_MAX = 12.2   // along right interior wall
 const RAMP_Z_MIN = 15.0, RAMP_Z_MAX = 20.5   // runs north along wall
+// Left-side ramp (task 6 — access left wall and front/back walls via left side)
+const RAMP_L_X_MIN = -12.2, RAMP_L_X_MAX = -10.0
+const RAMP_L_Z_MIN = 15.0,  RAMP_L_Z_MAX = 20.5
 
 // Returns the ground/surface Y at world position (px, pz).
 // currentY is passed so wall tops only stay elevated when player is already up there.
 function getGroundY(px, pz, currentY = 0) {
-  // Ramp: always provides elevation — this is the only way up
+  // Right ramp: always provides elevation
   if (px >= RAMP_X_MIN && px <= RAMP_X_MAX && pz >= RAMP_Z_MIN && pz <= RAMP_Z_MAX) {
     const t = (pz - RAMP_Z_MIN) / (RAMP_Z_MAX - RAMP_Z_MIN)
     return t * CASTLE_WALL_H
   }
+  // Left ramp (task 6)
+  if (px >= RAMP_L_X_MIN && px <= RAMP_L_X_MAX && pz >= RAMP_L_Z_MIN && pz <= RAMP_L_Z_MAX) {
+    const t = (pz - RAMP_L_Z_MIN) / (RAMP_L_Z_MAX - RAMP_L_Z_MIN)
+    return t * CASTLE_WALL_H
+  }
   // Wall tops — only count if the player is already at wall height
   if (currentY < CASTLE_WALL_H - 0.4) return 0
-  const W = 0.75
-  if (Math.abs(px - CASTLE_WALL_X_RIGHT) <= W && pz >= CASTLE_WALL_Z_FRONT && pz <= CASTLE_WALL_Z_BACK) return CASTLE_WALL_H
-  if (Math.abs(px - CASTLE_WALL_X_LEFT)  <= W && pz >= CASTLE_WALL_Z_FRONT && pz <= CASTLE_WALL_Z_BACK) return CASTLE_WALL_H
-  if (Math.abs(pz - CASTLE_WALL_Z_BACK)  <= W && px >= CASTLE_WALL_X_LEFT  && px <= CASTLE_WALL_X_RIGHT) return CASTLE_WALL_H
-  if (Math.abs(pz - CASTLE_WALL_Z_FRONT) <= W && px >= CASTLE_WALL_X_LEFT  && px <= CASTLE_WALL_X_RIGHT) return CASTLE_WALL_H
+  const W = 1.0  // wider surface for easier walking (task 6)
+  if (Math.abs(px - CASTLE_WALL_X_RIGHT) <= W && pz >= CASTLE_WALL_Z_FRONT - 0.5 && pz <= CASTLE_WALL_Z_BACK + 0.5) return CASTLE_WALL_H
+  if (Math.abs(px - CASTLE_WALL_X_LEFT)  <= W && pz >= CASTLE_WALL_Z_FRONT - 0.5 && pz <= CASTLE_WALL_Z_BACK + 0.5) return CASTLE_WALL_H
+  if (Math.abs(pz - CASTLE_WALL_Z_BACK)  <= W && px >= CASTLE_WALL_X_LEFT  - 0.5 && px <= CASTLE_WALL_X_RIGHT + 0.5) return CASTLE_WALL_H
+  if (Math.abs(pz - CASTLE_WALL_Z_FRONT) <= W && px >= CASTLE_WALL_X_LEFT  - 0.5 && px <= CASTLE_WALL_X_RIGHT + 0.5) return CASTLE_WALL_H
   return 0
 }
 
@@ -1883,6 +1937,12 @@ const NIGHT_SECONDS = 120    // must match App.jsx
 // Unrotated: 4 wide (x) × 3.4 deep (z) → after 90° rot: 3.4 wide (x) × 4 deep (z)
 const HOUSE_AABB = { minX: -12.7, maxX: -9.3, minZ: -2.0, maxZ: 2.0 }
 const PLAYER_R   = 0.4
+
+// Shop building AABBs (task 27): buildings at (npc.x, npc.z+3), size 4.0×3.6, with player radius buffer
+const SHOP_AABBS = CASTLE_NPCS.map(npc => ({
+  minX: npc.x - 2.4, maxX: npc.x + 2.4,
+  minZ: (npc.z + 3) - 2.2, maxZ: (npc.z + 3) + 2.2,
+}))
 
 function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEnter,
                      dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep,
@@ -2007,7 +2067,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     zombiesRef.current = []
     setZombieHps({})
     const dayCount = profile?.dayCount || 1
-    const minWanderers = Math.min(dayCount + 3, ALL_SPAWN_POS.length)
+    const minWanderers = Math.min(Math.ceil((dayCount + 5) / 8), 6)
     const validSpawns  = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
     const alive = zombiesRef.current.filter(z => z.hp > 0).length
 
@@ -2040,7 +2100,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     if (dayPhase !== 'night') return
     if (profile?.gameMode === 'peaceful') return
     const dayCount  = profile?.dayCount || 1
-    const batchSize = dayCount * 3 + 5
+    const batchSize = Math.min(2, Math.ceil((dayCount + 4) / 6))
     const validSpawns = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
     const added = []
     for (let i = 0; i < batchSize; i++) {
@@ -2069,7 +2129,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   useEffect(() => {
     if (zombiesRef.current.length === 0) {
       const dayCount   = profile?.dayCount || 1
-      const spawnCount = Math.min(dayCount + 3, ALL_SPAWN_POS.length)
+      const spawnCount = Math.min(Math.ceil((dayCount + 5) / 8), 6)
       const validSpawns = ALL_SPAWN_POS.filter(([x, z]) => !inFarm(x, z))
       const shuffled   = [...validSpawns].sort(() => Math.random() - 0.5)
       const newZombies = shuffled.slice(0, spawnCount).map(([x, z], i) => ({
@@ -2107,8 +2167,30 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     onPlotClick(index)
   }, [onPlotClick, totalCols])
 
+  // Click-to-attack zombie with sword (task 12)
+  const handleZombieClick = useCallback((zombieId) => {
+    if (equipSourceRef.current !== 'sword') return
+    if (Date.now() - swordCoolRef.current < 500) return
+    const z = zombiesRef.current.find(z => z.id === zombieId)
+    if (!z || z.hp <= 0) return
+    const px = playerPos.current.x, pz = playerPos.current.z
+    const dist = Math.sqrt((px - z.x) ** 2 + (pz - z.z) ** 2)
+    if (dist > PLOT_SPACING * 2) return  // must be reasonably close
+    swordCoolRef.current = Date.now()
+    const wasAlive = z.hp > 0
+    z.hp = Math.max(0, z.hp - (attackDmgRef.current || 1))
+    const hpFill = zombieHpBarMap.current.get(z.id)
+    if (hpFill) { const f = z.hp / 10; hpFill.scale.x = Math.max(0.001, f); hpFill.position.x = -0.35 * (1 - Math.max(0.001, f)) }
+    swingRef.current = 1
+    if (wasAlive && z.hp <= 0) {
+      setZombieHps(prev => ({ ...prev, [zombieId]: 0 }))
+      onPlayerDamaged?.({ killed: true })
+    }
+  }, [onPlayerDamaged])
+
   // Click-to-shoot bow: fire arrow toward clicked world position / zombie
   const handleBowClick = useCallback((event) => {
+    if (equipSourceRef.current !== 'bow') return   // task 15: only when bow equipped
     if (weaponRangeRef.current <= 0) return   // only with ranged weapon
     if (Date.now() - bowCoolRef.current < 1000) return  // 1s cooldown
     event.stopPropagation()
@@ -2223,22 +2305,48 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
             if (oz > CASTLE_WALL_Z_BACK && newZ <= CASTLE_WALL_Z_BACK) newZ = CASTLE_WALL_Z_BACK + 0.01
           }
 
-          // Left wall (X = CASTLE_WALL_X_LEFT) — blocks within wall Z range
-          if (newZ > CASTLE_WALL_Z_FRONT && newZ < CASTLE_WALL_Z_BACK) {
+          // Left wall (X = CASTLE_WALL_X_LEFT) — blocks within wall Z range (task 7: use >= to cover corners)
+          if (newZ >= CASTLE_WALL_Z_FRONT - 0.6 && newZ <= CASTLE_WALL_Z_BACK + 0.6) {
             if (ox > CASTLE_WALL_X_LEFT && newX <= CASTLE_WALL_X_LEFT) newX = CASTLE_WALL_X_LEFT + 0.01
             if (ox < CASTLE_WALL_X_LEFT && newX >= CASTLE_WALL_X_LEFT) newX = CASTLE_WALL_X_LEFT - 0.01
           }
 
-          // Right wall (X = CASTLE_WALL_X_RIGHT) — ramp zone exempt
-          const inRampZone = newZ >= RAMP_Z_MIN && newZ <= RAMP_Z_MAX
-          if (newZ > CASTLE_WALL_Z_FRONT && newZ < CASTLE_WALL_Z_BACK && !inRampZone) {
+          // Right wall (X = CASTLE_WALL_X_RIGHT) — solid from ground level; wall-top traversal handled by onWallTop bypass above
+          if (newZ >= CASTLE_WALL_Z_FRONT - 0.6 && newZ <= CASTLE_WALL_Z_BACK + 0.6) {
             if (ox < CASTLE_WALL_X_RIGHT && newX >= CASTLE_WALL_X_RIGHT) newX = CASTLE_WALL_X_RIGHT - 0.01
             if (ox > CASTLE_WALL_X_RIGHT && newX <= CASTLE_WALL_X_RIGHT) newX = CASTLE_WALL_X_RIGHT + 0.01
           }
         }
 
+        // Wall-top fence: prevent walking off wall edges without jumping (task 4)
+        if (onWallTop && jumpVel.current <= 0) {
+          const nextGndY = getGroundY(newX, newZ, playerPos.current.y)
+          if (nextGndY < CASTLE_WALL_H - 0.4) {
+            newX = playerPos.current.x
+            newZ = playerPos.current.z
+          }
+        }
+
         playerPos.current.x = newX
         playerPos.current.z = newZ
+      }
+
+      // City building collision (task 27): prevent walking through shop buildings
+      if (playerPos.current.z > CASTLE_WALL_Z_FRONT) {
+        for (const aabb of SHOP_AABBS) {
+          const cInX = playerPos.current.x > aabb.minX && playerPos.current.x < aabb.maxX
+          const cInZ = playerPos.current.z > aabb.minZ && playerPos.current.z < aabb.maxZ
+          if (cInX && cInZ) {
+            // push out on the shallower axis
+            const overlapX = Math.min(playerPos.current.x - aabb.minX, aabb.maxX - playerPos.current.x)
+            const overlapZ = Math.min(playerPos.current.z - aabb.minZ, aabb.maxZ - playerPos.current.z)
+            if (overlapX < overlapZ) {
+              playerPos.current.x = playerPos.current.x < (aabb.minX + aabb.maxX) / 2 ? aabb.minX : aabb.maxX
+            } else {
+              playerPos.current.z = playerPos.current.z < (aabb.minZ + aabb.maxZ) / 2 ? aabb.minZ : aabb.maxZ
+            }
+          }
+        }
       }
 
       // Update Y for new XZ position (ramp / wall tops)
@@ -2285,7 +2393,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       const dayCount      = dayCountRef.current
       const nightProgress = Math.min(spawnTimerRef.current / NIGHT_SECONDS, 1)
       // Trickle: 2 per second at max, scaling with day count
-      const maxTrickle = Math.floor(dayCount * 2 + nightProgress * dayCount * 2)
+      const maxTrickle = Math.floor((dayCount + nightProgress * dayCount) / 6)
       const trickleSpawned = zombiesRef.current.filter(z => z.id >= daySpawnRef.current).length
 
       if (trickleSpawned < maxTrickle) {
@@ -2327,9 +2435,46 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
         // If gate is intact, block zombies from entering castle unless gate is broken
         const gateIntact = gateHpRef.current > 0
         const approachingGate = z.z > 10 && z.z < 14 && Math.abs(z.x) < 3.5
-        // Task 1: leave gate attack if player re-enters attack range
         const playerIsClose = dist < 12
-        if (gateIntact && approachingGate && !playerIsClose) {
+        const playerInCity = pz > CASTLE_WALL_Z_FRONT  // player is safely inside castle
+
+        if (playerInCity && gateIntact) {
+          // Task 1: player inside city — zombies attack plants first, then the gate
+          let nearestPlotX = null, nearestPlotZ = null, nearestPlotDist = Infinity
+          for (let pi = 0; pi < plots.length; pi++) {
+            if (!plots[pi]) continue
+            const pcol = pi % totalColsRef.current
+            const prow = Math.floor(pi / totalColsRef.current)
+            const ppx = (pcol - 2) * PLOT_SPACING
+            const ppz = (prow - 2) * PLOT_SPACING
+            const pd = Math.sqrt((z.x - ppx) ** 2 + (z.z - ppz) ** 2)
+            if (pd < nearestPlotDist) { nearestPlotDist = pd; nearestPlotX = ppx; nearestPlotZ = ppz }
+          }
+          if (nearestPlotX !== null && nearestPlotDist > 0.8) {
+            // Move toward nearest plant
+            const tdx = nearestPlotX - z.x, tdz = nearestPlotZ - z.z
+            const td  = Math.sqrt(tdx * tdx + tdz * tdz)
+            z.x += (tdx / td) * ZOMBIE_SPEED * delta
+            z.z += (tdz / td) * ZOMBIE_SPEED * delta
+          } else if (approachingGate) {
+            // At gate — attack it
+            if (now - gateHitRef.current > 2000) {
+              gateHitRef.current = now
+              const newGateHp = Math.max(0, gateHpRef.current - 1)
+              gateHpRef.current = newGateHp
+              setGateHp(newGateHp)
+            }
+          } else {
+            // Move toward gate
+            const gdx = 0 - z.x, gdz = CASTLE_WALL_Z_FRONT - z.z
+            const gdist = Math.sqrt(gdx * gdx + gdz * gdz)
+            if (gdist > HIT_DIST) {
+              z.x += (gdx / gdist) * ZOMBIE_SPEED * delta
+              z.z += (gdz / gdist) * ZOMBIE_SPEED * delta
+            }
+          }
+        } else if (gateIntact && approachingGate && !playerIsClose) {
+          // Original gate attack behavior
           if (now - gateHitRef.current > 2000) {
             gateHitRef.current = now
             const newGateHp = Math.max(0, gateHpRef.current - 1)
@@ -2344,8 +2489,8 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 
         // Wall collision for night zombies — prevent crossing castle walls
         if (gateHpRef.current > 0) {
-          const throughGate = Math.abs(z.x) < CASTLE_GATE_X_MAX + 0.3
-          if (!throughGate && z.z > CASTLE_WALL_Z_FRONT - 0.5) {
+          // task 23: block ALL zombies from entering city until gate is broken
+          if (z.z > CASTLE_WALL_Z_FRONT - 0.5) {
             z.z = CASTLE_WALL_Z_FRONT - 0.5
           }
         }
@@ -2410,6 +2555,29 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       if (dist < HIT_DIST && now - z.lastHit > HIT_COOLDOWN) {
         z.lastHit = now
         onPlayerDamaged?.()
+      }
+    }
+
+    // ── Zombie separation — prevent clipping/overlapping (task 13) ─────────────
+    const ZOMBIE_SEP_RADIUS = 0.65
+    for (let i = 0; i < zombiesRef.current.length; i++) {
+      const a = zombiesRef.current[i]
+      if (a.hp <= 0) continue
+      for (let j = i + 1; j < zombiesRef.current.length; j++) {
+        const b = zombiesRef.current[j]
+        if (b.hp <= 0) continue
+        const sdx = b.x - a.x, sdz = b.z - a.z
+        const sdist = Math.sqrt(sdx * sdx + sdz * sdz)
+        if (sdist < ZOMBIE_SEP_RADIUS && sdist > 0.001) {
+          const push = (ZOMBIE_SEP_RADIUS - sdist) * 0.5
+          a.x -= (sdx / sdist) * push; a.z -= (sdz / sdist) * push
+          b.x += (sdx / sdist) * push; b.z += (sdz / sdist) * push
+          // update mesh positions immediately
+          const ma = zombieMeshMap.current.get(a.id)
+          if (ma) { ma.position.x = a.x; ma.position.z = a.z }
+          const mb = zombieMeshMap.current.get(b.id)
+          if (mb) { mb.position.x = b.x; mb.position.z = b.z }
+        }
       }
     }
 
@@ -2562,7 +2730,7 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
           setArrowRenders([...arrowsRef.current])
           swingRef.current = 1
         }
-      } else if (mode === 'sword' || (mode !== 'axe' && mode !== 'seeds' && weaponRangeRef.current === 0)) {
+      } else if (mode === 'sword') {
         // 3b. Sword / melee mode with cooldown (2 attacks/sec)
         if (Date.now() - swordCoolRef.current >= 500) {
           const atkDist = PLOT_SPACING
@@ -2586,7 +2754,16 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       } else if (mode === 'axe') {
         // 3c. Axe mode — chop trees
         const TREE_REACH = 2.8
-        if (chopDmgRef.current > 0 && Date.now() - chopCoolRef.current > 600) {
+        if (chopDmgRef.current === 0) {
+          // task 8: no axe owned — check if near a tree and show message
+          let nearTree = false
+          for (let tid = 0; tid < TREE_POSITIONS.length; tid++) {
+            if (choppedRef.current.has(tid)) continue
+            const [tx, tz] = TREE_POSITIONS[tid]
+            if (Math.sqrt((px - tx) ** 2 + (pz - tz) ** 2) < TREE_REACH) { nearTree = true; break }
+          }
+          if (nearTree) onMessage?.('🪓 You need an axe! Visit the Carpentry shop.')
+        } else if (chopDmgRef.current > 0 && Date.now() - chopCoolRef.current > 600) {
           for (let tid = 0; tid < TREE_POSITIONS.length; tid++) {
             if (choppedRef.current.has(tid)) continue
             const [tx, tz] = TREE_POSITIONS[tid]
@@ -2689,7 +2866,8 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 
       {zombiesRef.current.map(z => (
         <ZombieBody key={z.id} zombie={z} hp={zombieHps[z.id] ?? 10}
-          meshMapRef={zombieMeshMap} legMapRef={zombieLegMap} hpBarMapRef={zombieHpBarMap}/>
+          meshMapRef={zombieMeshMap} legMapRef={zombieLegMap} hpBarMapRef={zombieHpBarMap}
+          onAttack={handleZombieClick}/>
       ))}
 
       {/* Arrow projectiles — initial props only; position updated via meshMapRef */}
