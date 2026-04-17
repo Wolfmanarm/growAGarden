@@ -1439,6 +1439,7 @@ export default function App() {
   const [respawnSignal, setRespawnSignal] = useState(0)    // increments to trigger Garden3D respawn
   const dayTimerRef  = useRef(0)
   const dayPhaseRef  = useRef('day')
+  const timePausedRef = useRef(false)
   const tickerRef    = useRef()
   const saveTimerRef = useRef()
 
@@ -1541,6 +1542,7 @@ export default function App() {
   // ── Day/night cycle (task 4) ───────────────────────────────────────────────
   useEffect(() => {
     const interval = setInterval(() => {
+      if (timePausedRef.current) return
       dayTimerRef.current += 1000
       const cycleMs   = (DAY_SECONDS + NIGHT_SECONDS) * 1000
       const pos       = dayTimerRef.current % cycleMs
@@ -1743,6 +1745,7 @@ export default function App() {
       else if (e.key === '2') setEquipSource('bow')
       else if (e.key === '3') setEquipSource('axe')
       else if (e.key === '4') setEquipSource('seeds')
+      else if (e.key === 'p' || e.key === 'P') timePausedRef.current = !timePausedRef.current
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)

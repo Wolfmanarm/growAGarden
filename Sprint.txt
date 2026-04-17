@@ -1,1 +1,2 @@
-1: implemetn
+move the tree health bar slightly lower to the top of the tree.
+Change the tree chopping animation. instead of having it scale down with each chop, make it shake slightly with each hit from an axe to simulate impact from each hit, for when the tree is 0 health make it fall onto its side.

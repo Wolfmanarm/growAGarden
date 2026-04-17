@@ -1,5 +1,6 @@
-import { useRef, useEffect, useState, useMemo, useCallback } from 'react'
+import { useRef, useEffect, useState, useMemo, useCallback, forwardRef, useImperativeHandle } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useGLTF } from '@react-three/drei'
 import * as THREE from 'three'
 import { getPlantVisual } from './plants'
 
@@ -1223,23 +1224,172 @@ const TREE_POSITIONS = [
 ]
 const TREE_MAX_HP = 5   // hits to chop down a tree
 
-function PineTree({ x, z, hp }) {
-  const pct = hp / TREE_MAX_HP
+const LEAF_POOL = 160
+
+const LeafSystem = forwardRef(function LeafSystem(_, ref) {
+  const leafMeshRef = useRef()
+  const leafPool    = useRef(Array.from({ length: LEAF_POOL }, () => ({
+    active: false, px: 0, py: 0, pz: 0,
+    vx: 0, vy: 0, vz: 0,
+    rx: 0, ry: 0, rz: 0,
+    rvx: 0, rvy: 0, rvz: 0,
+    life: 0,
+  })))
+  const leafDummy = useMemo(() => new THREE.Object3D(), [])
+
+  useImperativeHandle(ref, () => ({
+    burst(x, z, treeHeight, treeRadius, count, speed) {
+      let spawned = 0
+      for (let i = 0; i < LEAF_POOL && spawned < count; i++) {
+        const p = leafPool.current[i]
+        if (p.active) continue
+        p.active = true
+        const heightFrac = Math.random()
+        const ringRadius = treeRadius * Math.sin(heightFrac * Math.PI) * Math.sqrt(Math.random())
+        const spawnAngle = Math.random() * Math.PI * 2
+        p.px = Math.cos(spawnAngle) * ringRadius + x
+        p.py = treeHeight * heightFrac
+        p.pz = Math.sin(spawnAngle) * ringRadius + z
+        const outAngle = spawnAngle + (Math.random() - 0.5) * 0.6
+        const spd      = (4.0 + Math.random() * 5.0) * speed
+        p.vx  = Math.cos(outAngle) * spd
+        p.vy  = (Math.random() - 0.3) * 0.4
+        p.vz  = Math.sin(outAngle) * spd
+        p.rx  = Math.random() * Math.PI * 2
+        p.ry  = Math.random() * Math.PI * 2
+        p.rz  = Math.random() * Math.PI * 2
+        p.rvx = (Math.random() - 0.5) * 10
+        p.rvy = (Math.random() - 0.5) * 10
+        p.rvz = (Math.random() - 0.5) * 10
+        p.life = 1.0
+        spawned++
+      }
+    }
+  }))
+
+  useFrame((_, delta) => {
+    if (!leafMeshRef.current) return
+    for (let i = 0; i < LEAF_POOL; i++) {
+      const p = leafPool.current[i]
+      if (!p.active) {
+        leafDummy.scale.setScalar(0)
+        leafDummy.updateMatrix()
+        leafMeshRef.current.setMatrixAt(i, leafDummy.matrix)
+        continue
+      }
+      p.vy  -= 0.9 * delta
+      const drag = Math.pow(0.92, delta * 60)
+      p.vx  *= drag
+      p.vz  *= drag
+      p.px  += p.vx * delta
+      p.py  += p.vy * delta
+      p.pz  += p.vz * delta
+      p.rx  += p.rvx * delta
+      p.ry  += p.rvy * delta
+      p.rz  += p.rvz * delta
+      p.life -= delta * 0.35
+      if (p.life <= 0 || p.py < -0.3) {
+        p.active = false
+        leafDummy.scale.setScalar(0)
+      } else {
+        leafDummy.position.set(p.px, p.py, p.pz)
+        leafDummy.rotation.set(p.rx, p.ry, p.rz)
+        const s = p.life * 0.22
+        leafDummy.scale.set(s, s * 0.6, s * 0.45)
+      }
+      leafDummy.updateMatrix()
+      leafMeshRef.current.setMatrixAt(i, leafDummy.matrix)
+    }
+    leafMeshRef.current.instanceMatrix.needsUpdate = true
+  })
+
   return (
-    <group position={[x, 0, z]}>
-      <mesh position={[0, 0.55, 0]} castShadow>
-        <cylinderGeometry args={[0.12, 0.18, 1.1, 6]}/>
-        <meshLambertMaterial color="#78350f"/>
-      </mesh>
-      {[0, 1, 2].map(i => (
-        <mesh key={i} position={[0, 1.1 + i * 0.65, 0]} castShadow>
-          <coneGeometry args={[(0.85 - i * 0.2) * pct, 1.0 * pct, 7]}/>
-          <meshLambertMaterial color={i % 2 === 0 ? '#14532d' : '#166534'}/>
-        </mesh>
-      ))}
-      {/* HP pip row */}
+    <instancedMesh ref={leafMeshRef} args={[undefined, undefined, LEAF_POOL]} frustumCulled={false}>
+      <boxGeometry args={[1, 1, 1]} />
+      <meshLambertMaterial color="#052e16" />
+    </instancedMesh>
+  )
+})
+
+function PineTree({ x, z, hp, leafSystemRef }) {
+  const { scene } = useGLTF('/3DFiles/Trees/FirstVersion/Tree1.glb')
+  const cloned = useMemo(() => scene.clone(), [scene])
+  const { offset, treeHeight, treeRadius, scaleY } = useMemo(() => {
+    const sy = 0.25 * (0.88 + Math.random() * 0.24)
+    cloned.traverse(obj => {
+      if (obj.isMesh) {
+        obj.castShadow = true
+        obj.receiveShadow = true
+        if (obj.morphTargetInfluences?.length) {
+          for (let i = 0; i < obj.morphTargetInfluences.length; i++) {
+            obj.morphTargetInfluences[i] = Math.random()
+          }
+        }
+      }
+    })
+    const box = new THREE.Box3().setFromObject(cloned)
+    const center = new THREE.Vector3()
+    box.getCenter(center)
+    return {
+      offset: [-center.x, -box.min.y, -center.z],
+      treeHeight: (box.max.y - box.min.y) * sy,
+      treeRadius: (Math.max(box.max.x - box.min.x, box.max.z - box.min.z) * 0.25) / 2,
+      scaleY: sy,
+    }
+  }, [cloned])
+  const fallDir  = useMemo(() => (Math.random() < 0.5 ? 1 : -1), [])
+  const baseTilt = useMemo(() => (Math.random() - 0.5) * 0.35, [])
+
+  const groupRef    = useRef()
+  const shakeRef    = useRef(0)
+  const shakeAmpRef = useRef(0.04)
+  const prevHpRef   = useRef(hp)
+  const fallingRef  = useRef(false)
+  const fallTimeRef = useRef(0)
+
+  useEffect(() => {
+    if (hp < prevHpRef.current) {
+      if (hp === 0) {
+        fallingRef.current = true
+        fallTimeRef.current = 0
+        leafSystemRef.current?.burst(x, z, treeHeight, treeRadius, 50, 1.4)
+      } else {
+        shakeRef.current = 0.4
+        shakeAmpRef.current = 0.04 + (1 - hp / TREE_MAX_HP) * 0.15
+        leafSystemRef.current?.burst(x, z, treeHeight, treeRadius, 18, 0.5 + (1 - hp / TREE_MAX_HP) * 0.7)
+      }
+    } else if (hp > prevHpRef.current) {
+      fallingRef.current = false
+      shakeRef.current = 0
+      if (groupRef.current) groupRef.current.rotation.z = 0
+    }
+    prevHpRef.current = hp
+  }, [hp])
+
+  useFrame((state, delta) => {
+    if (!groupRef.current) return
+    if (fallingRef.current) {
+      fallTimeRef.current += delta
+      const t = Math.min(fallTimeRef.current / 1.0, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      groupRef.current.rotation.z = fallDir * eased * (Math.PI / 2)
+    } else if (shakeRef.current > 0) {
+      shakeRef.current -= delta
+      const intensity = Math.max(0, shakeRef.current / 0.4)
+      groupRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 30) * shakeAmpRef.current * intensity
+      if (shakeRef.current <= 0) groupRef.current.rotation.z = 0
+    }
+  })
+
+  return (
+    <group ref={groupRef} position={[x, 0, z]}>
+      <group rotation={[0, 0, baseTilt]}>
+        <group scale={[0.25, scaleY, 0.25]}>
+          <primitive object={cloned} position={offset} castShadow receiveShadow />
+        </group>
+      </group>
       {Array.from({length: TREE_MAX_HP}).map((_, i) => (
-        <mesh key={`hp${i}`} position={[(i - (TREE_MAX_HP-1)/2) * 0.18, 3.0, 0]}>
+        <mesh key={`hp${i}`} position={[(i - (TREE_MAX_HP-1)/2) * 0.18, treeHeight + 0.08, 0]}>
           <boxGeometry args={[0.14, 0.1, 0.04]}/>
           <meshLambertMaterial color={i < hp ? '#22c55e' : '#374151'}/>
         </mesh>
@@ -1247,6 +1397,7 @@ function PineTree({ x, z, hp }) {
     </group>
   )
 }
+useGLTF.preload('/3DFiles/Trees/FirstVersion/Tree1.glb')
 
 function Stump({ x, z }) {
   return (
@@ -1260,8 +1411,10 @@ function Stump({ x, z }) {
 }
 
 function Wilderness({ treeHps, choppedTrees }) {
+  const leafSystemRef = useRef()
   return (
     <group>
+      <LeafSystem ref={leafSystemRef} />
       <mesh rotation={[-Math.PI/2, 0, 0]} position={[0, -0.06, -24]} receiveShadow>
         <planeGeometry args={[42, 24]}/>
         <meshLambertMaterial color="#1a2e1a"/>
@@ -1291,7 +1444,7 @@ function Wilderness({ treeHps, choppedTrees }) {
       {TREE_POSITIONS.map(([x, z], id) =>
         choppedTrees.has(id)
           ? <Stump key={id} x={x} z={z} />
-          : <PineTree key={id} x={x} z={z} hp={treeHps[id] ?? TREE_MAX_HP} />
+          : <PineTree key={id} x={x} z={z} hp={treeHps[id] ?? TREE_MAX_HP} leafSystemRef={leafSystemRef} />
       )}
     </group>
   )
@@ -2777,8 +2930,9 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
               setTreeHps(prev => ({ ...prev, [tid]: newHp }))
               if (newHp <= 0) {
                 choppedRef.current = new Set([...choppedRef.current, tid])
-                setChoppedTrees(new Set(choppedRef.current))
                 onTreeChopped?.(treeBaseReward)
+                const fallenId = tid
+                setTimeout(() => setChoppedTrees(prev => new Set([...prev, fallenId])), 1200)
               }
               break
             }
