@@ -58,6 +58,15 @@ if (process.env.DATABASE_URL) {
         )
       `)
 
+      // Create player sessions table for stats tracking
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS player_sessions (
+          id         SERIAL PRIMARY KEY,
+          username   TEXT NOT NULL,
+          created_at TIMESTAMPTZ DEFAULT NOW()
+        )
+      `)
+
       console.log('🌱 PostgreSQL schema initialized')
     } catch (err) {
       console.error('Failed to initialize PostgreSQL schema:', err)
@@ -115,6 +124,14 @@ if (process.env.DATABASE_URL) {
     );
   `)
 
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS player_sessions (
+      id         INTEGER PRIMARY KEY AUTOINCREMENT,
+      username   TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `)
+
   console.log('🌱 SQLite initialized')
 }
 
@@ -158,6 +175,42 @@ const insertFeedback = async (username, message) => {
   )
 }
 
+const recordSession = async (username) => {
+  try {
+    await query('INSERT INTO player_sessions (username) VALUES ($1)', [username])
+  } catch {}
+}
+
+const getPlayerStats = async () => {
+  try {
+    const total = await query('SELECT COUNT(DISTINCT username) as cnt FROM users', [])
+    const today = await query(
+      process.env.DATABASE_URL
+        ? "SELECT COUNT(DISTINCT username) as cnt FROM player_sessions WHERE created_at >= NOW() - INTERVAL '1 day'"
+        : "SELECT COUNT(DISTINCT username) as cnt FROM player_sessions WHERE created_at >= datetime('now', '-1 day')",
+      []
+    )
+    const week = await query(
+      process.env.DATABASE_URL
+        ? "SELECT COUNT(DISTINCT username) as cnt FROM player_sessions WHERE created_at >= NOW() - INTERVAL '7 days'"
+        : "SELECT COUNT(DISTINCT username) as cnt FROM player_sessions WHERE created_at >= datetime('now', '-7 days')",
+      []
+    )
+    const month = await query(
+      process.env.DATABASE_URL
+        ? "SELECT COUNT(DISTINCT username) as cnt FROM player_sessions WHERE created_at >= NOW() - INTERVAL '30 days'"
+        : "SELECT COUNT(DISTINCT username) as cnt FROM player_sessions WHERE created_at >= datetime('now', '-30 days')",
+      []
+    )
+    return {
+      total: Number(total[0]?.cnt || 0),
+      today: Number(today[0]?.cnt || 0),
+      week:  Number(week[0]?.cnt || 0),
+      month: Number(month[0]?.cnt || 0),
+    }
+  } catch { return { total: 0, today: 0, week: 0, month: 0 } }
+}
+
 // ─── App ──────────────────────────────────────────────────────────────────────
 const DIST = join(__dirname, '../dist')
 const app = express()
@@ -192,6 +245,7 @@ app.post('/api/register', async (req, res) => {
     const hash = await bcrypt.hash(password, ROUNDS)
     await createUser(name, hash, JSON.stringify(profile || {}))
     const row = await findUser(name)
+    await recordSession(name)
     res.json({ ok: true, profile: JSON.parse(row.profile_json), isNew: true })
   } catch (err) {
     console.error('Error in /api/register:', err)
@@ -220,6 +274,7 @@ app.post('/api/login', async (req, res) => {
       await setPassword(hash, name)
     }
 
+    await recordSession(name)
     try {
       res.json({ ok: true, profile: JSON.parse(row.profile_json) })
     } catch {
@@ -260,6 +315,17 @@ app.get('/api/load/:username', async (req, res) => {
   } catch (err) {
     console.error('Error in /api/load:', err)
     res.status(500).json({ error: 'Load failed' })
+  }
+})
+
+// Player stats (task 7)
+app.get('/api/stats', async (_req, res) => {
+  try {
+    const stats = await getPlayerStats()
+    res.json(stats)
+  } catch (err) {
+    console.error('Error in /api/stats:', err)
+    res.status(500).json({ error: 'Stats query failed' })
   }
 })
 

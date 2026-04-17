@@ -159,6 +159,22 @@ const FERTILIZER_UPGRADES = [
 ]
 const TREE_BASE_WOOD = 5   // wood per tree chop
 
+// ─── Wilderness fence upgrades (task 9) ──────────────────────────────────────
+const WILDERNESS_FENCE_UPGRADES = [
+  { id: 'wfence_1', name: 'Reinforced Posts',  emoji: '🌲', cost: 300,   hpBonus: 10, description: 'Fence +10 HP (20 total). Zombies need to work harder.' },
+  { id: 'wfence_2', name: 'Iron Fence',         emoji: '⛓️', cost: 800,   hpBonus: 20, description: 'Fence +20 HP (40 total). Iron rails slow zombies.' },
+  { id: 'wfence_3', name: 'Stone Foundation',   emoji: '🪨', cost: 2000,  hpBonus: 40, description: 'Fence +40 HP (80 total). Stone footings make it sturdy.' },
+  { id: 'wfence_4', name: 'Electrified Wire',   emoji: '⚡', cost: 5000,  hpBonus: 80, description: 'Fence +80 HP (160 total). Zaps zombies on contact.' },
+  { id: 'wfence_5', name: 'Fortress Barrier',   emoji: '🏰', cost: 15000, hpBonus: 160, description: 'Fence +160 HP (320 total). Nearly impenetrable.' },
+]
+
+// ─── City villager positions (task 1) ─────────────────────────────────────────
+const CITY_VILLAGERS = [
+  { id: 'v1', name: 'Farmer Tom', x: -8, z: 20 },
+  { id: 'v2', name: 'Baker Lily', x:  8, z: 20 },
+  { id: 'v3', name: 'Miller Roy', x:  0, z: 26 },
+]
+
 const DIAMOND_PACKS = [
   { id: 'pack_sm',  name: 'Small Pouch',  emoji: '💎', amount: 500,   price: '$0.99'  },
   { id: 'pack_md',  name: 'Medium Chest', emoji: '💎', amount: 2500,  price: '$3.99'  },
@@ -326,6 +342,11 @@ function hydrateProfile(data) {
   if (data.wood              == null) data.wood               = 0
   if (data.diamonds          == null) data.diamonds           = 0
   if (!data.gameMode)                data.gameMode            = 'regular'
+  if (!data.villagers)               data.villagers           = { v1: true, v2: true, v3: true }
+  if (!data.villagerRespawnDays)     data.villagerRespawnDays = {}
+  if (!data.fenceUpgrades)          data.fenceUpgrades       = {}
+  if (data.tutorialStep === undefined) data.tutorialStep      = null
+  if (data.isGuest === undefined)   data.isGuest             = false
   return data
 }
 
@@ -376,6 +397,11 @@ function defaultProfile(username = '') {
     gameMode: 'regular',
     outfit: { ...DEFAULT_OUTFIT },
     wardrobeOwned: { ...DEFAULT_WARDROBE_OWNED },
+    villagers: { v1: true, v2: true, v3: true },
+    villagerRespawnDays: {},
+    fenceUpgrades: {},
+    tutorialStep: null,
+    isGuest: false,
   }
 }
 
@@ -412,7 +438,7 @@ function HardcoreGameOverScreen({ days, kills, onDismiss }) {
 }
 
 // ─── Login overlay ────────────────────────────────────────────────────────────
-function LoginOverlay({ onLogin }) {
+function LoginOverlay({ onLogin, onGuest }) {
   const [tab, setTab]           = useState('register') // 'login' | 'register'
   const [name, setName]         = useState('')
   const [password, setPassword] = useState('')
@@ -518,6 +544,17 @@ function LoginOverlay({ onLogin }) {
             whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.01 }}>
             {loading ? 'Loading…' : tab === 'login' ? 'Log In 🌸' : 'Create Account 🌱'}
           </motion.button>
+          <div className="relative flex items-center py-2">
+            <div className="flex-1 border-t border-gray-200"/>
+            <span className="px-3 text-xs text-gray-400 font-semibold">or</span>
+            <div className="flex-1 border-t border-gray-200"/>
+          </div>
+          <motion.button type="button" onClick={() => onGuest(mode)}
+            className="w-full bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold rounded-xl py-3 text-sm transition-colors"
+            whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.01 }}>
+            👤 Sign In as Guest
+          </motion.button>
+          <p className="text-xs text-gray-400 text-center mt-1">Progress saves locally only. No account needed.</p>
         </form>
       </motion.div>
     </motion.div>
@@ -711,7 +748,8 @@ function ShopPanel({ profile, onBuySeed, onUnlock, onBuyItem, onBuyFertUpgrade, 
 }
 
 // ─── Stats / profile panel ────────────────────────────────────────────────────
-function StatsPanel({ profile, onClose, onLogout }) {
+function StatsPanel({ profile, onClose, onLogout, musicMuted, onToggleMusic, onShowFeedback, onShowCastle }) {
+  const aliveVillagers = profile.villagers ? Object.values(profile.villagers).filter(Boolean).length : 3
   return (
     <motion.div className="fixed inset-0 z-40 flex items-center justify-center p-4"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
@@ -720,9 +758,29 @@ function StatsPanel({ profile, onClose, onLogout }) {
         initial={{ scale: 0.9, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9 }}
         onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-xl font-extrabold text-gray-800">Your Garden</h2>
+          <h2 className="text-xl font-extrabold text-gray-800">Profile {profile.isGuest && <span className="text-xs font-normal text-gray-400 ml-1">(Guest)</span>}</h2>
           <button onClick={onClose}><X size={20} className="text-gray-400" /></button>
         </div>
+
+        {/* Quick-action buttons */}
+        <div className="flex gap-2 mb-5">
+          <motion.button onClick={() => { onShowFeedback(); onClose() }}
+            className="flex-1 flex items-center justify-center gap-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-2xl py-3 text-sm transition-colors"
+            whileTap={{ scale: 0.97 }}>
+            <MessageSquare size={18}/> Feedback
+          </motion.button>
+          <motion.button onClick={() => { onShowCastle(); onClose() }}
+            className="flex-1 flex items-center justify-center gap-2 bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold rounded-2xl py-3 text-sm transition-colors"
+            whileTap={{ scale: 0.97 }}>
+            🏰 Castle
+          </motion.button>
+          <motion.button onClick={onToggleMusic}
+            className="flex-1 flex items-center justify-center gap-2 bg-purple-50 hover:bg-purple-100 text-purple-700 font-bold rounded-2xl py-3 text-sm transition-colors"
+            whileTap={{ scale: 0.97 }}>
+            {musicMuted ? '🔇' : '🎵'} Music
+          </motion.button>
+        </div>
+
         <div className="space-y-3">
           {[
             { bg: 'bg-yellow-50', icon: '💰', label: 'GOLD BALANCE',         val: profile.petals.toLocaleString(),         color: 'text-yellow-600' },
@@ -734,6 +792,7 @@ function StatsPanel({ profile, onClose, onLogout }) {
             { bg: 'bg-sky-50',    icon: '📅', label: 'DAYS SURVIVED',        val: profile.dayCount || 1,                    color: 'text-sky-600'    },
             { bg: 'bg-red-50',    icon: '⚔️',  label: 'WEAPON',               val: profile.equippedWeapon ? WEAPONS_SHOP.find(w=>w.id===profile.equippedWeapon)?.name || 'None' : 'None', color: 'text-red-600' },
             { bg: 'bg-orange-50', icon: '🧟', label: 'ZOMBIES SLAIN',        val: profile.zombieKills || 0,                 color: 'text-orange-600' },
+            { bg: 'bg-emerald-50',icon: '👥', label: 'CITY VILLAGERS',       val: `${aliveVillagers} / 3 alive`,            color: 'text-emerald-600'},
           ].map(({ bg, icon, label, val, color }) => (
             <div key={label} className={`flex items-center gap-3 p-3 ${bg} rounded-2xl`}>
               <span className="text-2xl">{icon}</span>
@@ -1037,6 +1096,59 @@ function FeedbackPanel({ onSubmit, onClose }) {
   )
 }
 
+// ─── Tutorial overlay (task 6) ────────────────────────────────────────────────
+const TUTORIAL_STEPS = [
+  { icon: '🌸', title: 'Welcome to Grow a Garden!', text: 'Let\'s take a quick tour. Use W/A/S/D or Arrow Keys to move, and right-click drag to rotate the camera.', action: 'Next →' },
+  { icon: '🌱', title: 'Plant a Seed', text: 'Walk near any brown plot (the dirt squares) and press E, or click it, to plant a Daisy seed. You already have seeds in your inventory!', action: 'Got it!' },
+  { icon: '🌼', title: 'Harvest Your Plants', text: 'When a plant glows green it\'s ready! Click or press E near it to harvest and earn 💰 Gold.', action: 'Got it!' },
+  { icon: '🛍️', title: 'Buy Upgrades', text: 'Talk to the NPCs in the castle (head north!) to buy weapons, upgrades, and more. Or use the Shop button to buy seeds.', action: 'Got it!' },
+  { icon: '🪓', title: 'Chop Trees', text: 'Head south into the wilderness to find trees. Buy an axe from the weapons NPC, then press E near a tree to chop it for 🪵 Wood.', action: 'Got it!' },
+  { icon: '📺', title: 'Watch Ads for Boost', text: 'Tap the TV 📺 button in the top bar to watch a short ad and double your growing speed for all plants!', action: 'Got it!' },
+  { icon: '💌', title: 'Send Feedback', text: 'Tap your profile icon 👤 in the top-right, then press "Feedback" to send us your thoughts. We read every message!', action: 'Finish Tutorial ✓' },
+]
+
+function TutorialOverlay({ step, onNext, onSkip }) {
+  if (step === null || step === undefined || step >= TUTORIAL_STEPS.length) return null
+  const s = TUTORIAL_STEPS[step]
+  const isLast = step === TUTORIAL_STEPS.length - 1
+  return (
+    <motion.div
+      className="fixed bottom-44 left-1/2 -translate-x-1/2 z-50 w-full max-w-xs px-3"
+      initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
+      key={step}>
+      <div className="bg-white rounded-3xl shadow-2xl p-5 border-2 border-green-200">
+        <div className="flex items-start gap-3 mb-3">
+          <span className="text-3xl">{s.icon}</span>
+          <div>
+            <div className="font-extrabold text-gray-800 text-base">{s.title}</div>
+            <div className="text-sm text-gray-500 mt-0.5">{s.text}</div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <div className="flex gap-1 items-center flex-1">
+            {TUTORIAL_STEPS.map((_, i) => (
+              <div key={i} className={`h-1.5 rounded-full flex-1 ${i <= step ? 'bg-green-400' : 'bg-gray-200'}`}/>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-2 mt-3">
+          {!isLast && (
+            <button onClick={onSkip}
+              className="text-xs text-gray-400 hover:text-gray-600 font-semibold px-2 py-1.5 rounded-lg">
+              Skip tutorial
+            </button>
+          )}
+          <motion.button onClick={onNext}
+            className="flex-1 bg-gradient-to-r from-green-400 to-emerald-500 text-white font-bold rounded-xl py-2.5 text-sm shadow"
+            whileTap={{ scale: 0.97 }}>
+            {s.action}
+          </motion.button>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
 // ─── Weapons & Armour panel ───────────────────────────────────────────────────
 function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEquipArmour, onBuyAxe, onEquipAxe, onClose }) {
   const [tab, setTab] = useState('weapons')
@@ -1140,7 +1252,7 @@ function WeaponsPanel({ profile, onBuyWeapon, onBuyArmour, onEquipWeapon, onEqui
 }
 
 // ─── Carpentry panel (house upgrades + sawmill) ───────────────────────────────
-function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onClose }) {
+function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onBuyFenceUpgrade, onClose }) {
   const [tab, setTab] = useState('house')
   const currentLevel = profile.houseLevel || 0
   const nextUpgrade  = HOUSE_UPGRADES[currentLevel]
@@ -1164,10 +1276,10 @@ function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onClose }) {
           </div>
         </div>
         <div className="flex border-b border-gray-100">
-          {['house','sawmill'].map(t => (
+          {['house','sawmill','fence'].map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`flex-1 py-2.5 text-sm font-bold ${tab===t?'text-amber-600 border-b-2 border-amber-400':'text-gray-400'}`}>
-              {t === 'house' ? '🏠 House' : '🪚 Sawmill'}
+              {t === 'house' ? '🏠 House' : t === 'sawmill' ? '🪚 Sawmill' : '🌲 Fence'}
             </button>
           ))}
         </div>
@@ -1219,6 +1331,33 @@ function CarpentryPanel({ profile, onUpgrade, onBuySawmill, onClose }) {
               </div>
             )
           })}
+          {tab === 'fence' && (
+            <>
+              <div className="bg-green-50 rounded-2xl p-3 mb-1">
+                <p className="text-sm text-green-700 font-semibold">🌲 Wilderness Fence</p>
+                <p className="text-xs text-green-600 mt-1">The fence at the south boundary blocks zombies at night. Upgrade it so zombies need more hits to break through. Repairs each morning.</p>
+              </div>
+              {WILDERNESS_FENCE_UPGRADES.map(item => {
+                const owned     = !!(profile.fenceUpgrades || {})[item.id]
+                const canAfford = profile.petals >= item.cost
+                return (
+                  <div key={item.id} className={`flex items-center gap-3 p-3 rounded-2xl border-2 ${owned?'border-green-300 bg-green-50':'border-gray-200 bg-white'}`}>
+                    <span className="text-3xl">{item.emoji}</span>
+                    <div className="flex-1">
+                      <div className="font-bold text-gray-800">{item.name}</div>
+                      <div className="text-xs text-gray-500">{item.description}</div>
+                    </div>
+                    <motion.button onClick={() => !owned && onBuyFenceUpgrade(item)}
+                      disabled={owned || !canAfford}
+                      className={`text-xs font-bold px-3 py-1.5 rounded-xl ${owned?'bg-green-100 text-green-700':canAfford?'bg-white border border-gray-200 shadow':'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                      whileTap={!owned && canAfford ? { scale: 0.9 } : {}}>
+                      {owned ? 'Built' : `💰 ${item.cost.toLocaleString()}`}
+                    </motion.button>
+                  </div>
+                )
+              })}
+            </>
+          )}
         </div>
       </motion.div>
     </motion.div>
@@ -1423,6 +1562,7 @@ export default function App() {
   const [playerHp, setPlayerHp]       = useState(10)
   const [hardcoreGameOver, setHardcoreGameOver] = useState(null)  // { days, kills } | null
   const [showFeedback, setShowFeedback] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
   const [castleShop, setCastleShop]   = useState(null)   // 'weapons'|'carpentry'|'potions'|'general'
   const [npcDialog, setNpcDialog]     = useState(null)   // npc id showing dialog
   const [nearNpcId, setNearNpcId]     = useState(null)
@@ -1442,6 +1582,13 @@ export default function App() {
   const timePausedRef = useRef(false)
   const tickerRef    = useRef()
   const saveTimerRef = useRef()
+
+  // ── Show tutorial if profile has a pending step ────────────────────────────
+  useEffect(() => {
+    if (profile && profile.tutorialStep !== null && profile.tutorialStep !== undefined) {
+      setShowTutorial(true)
+    }
+  }, [profile?.username]) // only when user changes (login)
 
   // ── Load on mount ──────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1557,7 +1704,20 @@ export default function App() {
         dayPhaseRef.current = newPhase
         setDayPhase(newPhase)
         if (newPhase === 'day') {
-          setProfile(prev => prev ? ({ ...prev, dayCount: (prev.dayCount || 1) + 1 }) : prev)
+          setProfile(prev => {
+            if (!prev) return prev
+            const nextDay = (prev.dayCount || 1) + 1
+            // Check villager respawns (task 1: respawn after 3 in-game days)
+            const newVillagers = { ...(prev.villagers || { v1: true, v2: true, v3: true }) }
+            const newRespawnDays = { ...(prev.villagerRespawnDays || {}) }
+            for (const id of ['v1', 'v2', 'v3']) {
+              if (!newVillagers[id] && newRespawnDays[id] && nextDay >= newRespawnDays[id]) {
+                newVillagers[id] = true
+                delete newRespawnDays[id]
+              }
+            }
+            return { ...prev, dayCount: nextDay, villagers: newVillagers, villagerRespawnDays: newRespawnDays }
+          })
         }
       }
     }, 1000)
@@ -1610,14 +1770,28 @@ export default function App() {
 
       if (success) {
         loaded.username = username
+        if (isRegister) loaded.tutorialStep = 0  // start tutorial for new accounts
         setProfile(loaded)
         saveLocal(loaded)
         setShowLogin(false)
+        if (isRegister) setShowTutorial(true)
         showToast(`Welcome${loaded.totalHarvested > 0 ? ' back' : ''}, ${username}! 🌸`)
       }
     } catch (err) {
       return 'Login error. Please try again.'
     }
+  }, [showToast])
+
+  // ── Guest login ────────────────────────────────────────────────────────────
+  const handleGuestLogin = useCallback((gameMode = 'regular') => {
+    const guestId   = Math.floor(Math.random() * 9999).toString().padStart(4, '0')
+    const guestName = `Guest_${guestId}`
+    const loaded    = hydrateProfile({ ...defaultProfile(guestName), gameMode, isGuest: true, tutorialStep: 0 })
+    setProfile(loaded)
+    saveLocal(loaded)
+    setShowLogin(false)
+    setShowTutorial(true)
+    showToast(`Welcome, ${guestName}! 🌸`)
   }, [showToast])
 
   // ── Logout ─────────────────────────────────────────────────────────────────
@@ -1718,7 +1892,46 @@ export default function App() {
     dayTimerRef.current += cycleMs - pos
     dayPhaseRef.current = 'day'
     setDayPhase('day')
-    setProfile(prev => prev ? ({ ...prev, dayCount: (prev.dayCount || 1) + 1 }) : prev)
+    setProfile(prev => {
+      if (!prev) return prev
+      const nextDay = (prev.dayCount || 1) + 1
+      const newVillagers = { ...(prev.villagers || { v1: true, v2: true, v3: true }) }
+      const newRespawnDays = { ...(prev.villagerRespawnDays || {}) }
+      for (const id of ['v1', 'v2', 'v3']) {
+        if (!newVillagers[id] && newRespawnDays[id] && nextDay >= newRespawnDays[id]) {
+          newVillagers[id] = true
+          delete newRespawnDays[id]
+        }
+      }
+      return { ...prev, dayCount: nextDay, villagers: newVillagers, villagerRespawnDays: newRespawnDays }
+    })
+  }, [showToast])
+
+  // ── Villager killed by zombie (task 1) ────────────────────────────────────
+  const handleVillagerKilled = useCallback((villagerId) => {
+    setProfile(prev => {
+      if (!prev) return prev
+      const currentDay = prev.dayCount || 1
+      const villager   = CITY_VILLAGERS.find(v => v.id === villagerId)
+      if (!villager) return prev
+      if (!(prev.villagers || {})[villagerId]) return prev  // already dead
+      showToast(`💔 ${villager.name} was killed! Respawns in 3 days.`)
+      return {
+        ...prev,
+        villagers: { ...(prev.villagers || {}), [villagerId]: false },
+        villagerRespawnDays: { ...(prev.villagerRespawnDays || {}), [villagerId]: currentDay + 3 },
+      }
+    })
+  }, [showToast])
+
+  // ── Buy wilderness fence upgrade (task 9) ─────────────────────────────────
+  const handleBuyFenceUpgrade = useCallback((item) => {
+    setProfile(prev => {
+      if (!prev || prev.petals < item.cost) { showToast('Not enough gold!'); return prev }
+      if ((prev.fenceUpgrades || {})[item.id]) return prev
+      showToast(`${item.emoji} ${item.name} built! Fence is stronger now.`)
+      return { ...prev, petals: prev.petals - item.cost, fenceUpgrades: { ...(prev.fenceUpgrades || {}), [item.id]: true } }
+    })
   }, [showToast])
 
   // ── NPC / castle shop handlers (tasks 1, 7, 8) ───────────────────────────
@@ -1730,6 +1943,11 @@ export default function App() {
   const handleNpcOpenShop = useCallback(() => {
     setCastleShop(npcDialog)
     setNpcDialog(null)
+    // Tutorial: advance from step 3 (visit shop) → 4
+    setProfile(prev => {
+      if (!prev || prev.tutorialStep !== 3) return prev
+      return { ...prev, tutorialStep: 4 }
+    })
   }, [npcDialog])
 
   // Tasks 3 & 5: hotbar keys 1-4 and E to close active shop/dialog
@@ -1745,7 +1963,7 @@ export default function App() {
       else if (e.key === '2') setEquipSource('bow')
       else if (e.key === '3') setEquipSource('axe')
       else if (e.key === '4') setEquipSource('seeds')
-      else if (e.key === 'p' || e.key === 'P') timePausedRef.current = !timePausedRef.current
+      else if ((e.key === 'p' || e.key === 'P') && import.meta.env.DEV) timePausedRef.current = !timePausedRef.current
     }
     window.addEventListener('keydown', handleKey)
     return () => window.removeEventListener('keydown', handleKey)
@@ -1870,7 +2088,10 @@ export default function App() {
       const mult = SAWMILL_UPGRADES.reduce((m, u) => ownedUpgrades[u.id] ? u.woodMult : m, 1)
       const wood = Math.floor(baseWood * mult)
       showToast(`🪵 Tree chopped! +${wood} wood`)
-      return { ...prev, wood: (prev.wood || 0) + wood }
+      // Tutorial: advance from step 4 (chop trees) → 5
+      const tutStep = prev.tutorialStep
+      const newTutStep = tutStep === 4 ? 5 : tutStep
+      return { ...prev, wood: (prev.wood || 0) + wood, tutorialStep: newTutStep }
     })
   }, [showToast])
 
@@ -1907,7 +2128,10 @@ export default function App() {
         newPlots[index] = null
         showToast(`+${reward.toLocaleString()} 💰 ${plant.name} harvested!`)
         playCrunchSound()
-        return { ...prev, petals: prev.petals + reward, totalHarvested: prev.totalHarvested + reward, plots: newPlots }
+        // Tutorial: advance from step 2 (harvest) → 3
+        const tutStep = prev.tutorialStep
+        const newTutStep = tutStep === 2 ? 3 : tutStep
+        return { ...prev, petals: prev.petals + reward, totalHarvested: prev.totalHarvested + reward, plots: newPlots, tutorialStep: newTutStep }
       }
 
       if (!plot && selectedSeed) {
@@ -1931,7 +2155,10 @@ export default function App() {
         if (p.seedCost > 0) newOwned[selectedSeed] = Math.max(0, owned - 1)
         const newCharges = fertTier > 0 && fertCharges > 0 ? Math.max(0, fertCharges - 1) : fertCharges
         playCrunchSound()
-        return { ...prev, plots: newPlots, ownedSeeds: newOwned, hasFertilizer: false, fertilizerCharges: newCharges }
+        // Tutorial: advance from step 1 (plant) → 2
+        const tutStep = prev.tutorialStep
+        const newTutStep = tutStep === 1 ? 2 : tutStep
+        return { ...prev, plots: newPlots, ownedSeeds: newOwned, hasFertilizer: false, fertilizerCharges: newCharges, tutorialStep: newTutStep }
       }
       return prev
     })
@@ -2025,7 +2252,10 @@ export default function App() {
         return { ...plot, elapsed, totalGrowTime: newTotal, savedAt: now }
       })
       showToast('🚀 2× growth boost applied to all growing plants!')
-      return { ...prev, plots: newPlots, lastAdTime: now }
+      // Tutorial: advance from step 5 (watch ad) → 6
+      const tutStep = prev.tutorialStep
+      const newTutStep = tutStep === 5 ? 6 : tutStep
+      return { ...prev, plots: newPlots, lastAdTime: now, tutorialStep: newTutStep }
     })
   }, [showToast])
 
@@ -2073,7 +2303,7 @@ export default function App() {
   if (showLogin) {
     return (
       <div className="fixed inset-0 overflow-hidden font-rounded">
-        <LoginOverlay onLogin={handleLogin} />
+        <LoginOverlay onLogin={handleLogin} onGuest={handleGuestLogin} />
       </div>
     )
   }
@@ -2092,6 +2322,9 @@ export default function App() {
   const defense         = profile.equippedArmour ? (ARMOUR_SHOP.find(a => a.id === profile.equippedArmour)?.defense || 0) : 0
   const axeItem         = profile.equippedAxe ? AXES_SHOP.find(a => a.id === profile.equippedAxe) : null
   const chopDamage      = axeItem?.chopDamage || 0
+  // Task 8/9: wilderness fence max HP from upgrades
+  const wildFenceMaxHp  = 10 + WILDERNESS_FENCE_UPGRADES.reduce((sum, u) =>
+    (profile.fenceUpgrades || {})[u.id] ? sum + u.hpBonus : sum, 0)
 
   return (
     <div className="fixed inset-0 overflow-hidden font-rounded">
@@ -2117,10 +2350,13 @@ export default function App() {
         respawnSignal={respawnSignal}
         onMessage={showToast}
         shopOpen={!!(castleShop || npcDialog)}
+        wildFenceMaxHp={wildFenceMaxHp}
+        villagers={profile.villagers || { v1: true, v2: true, v3: true }}
+        onVillagerKilled={handleVillagerKilled}
       />
 
       <AnimatePresence>
-        {showLogin && <LoginOverlay onLogin={handleLogin} />}
+        {showLogin && <LoginOverlay onLogin={handleLogin} onGuest={handleGuestLogin} />}
       </AnimatePresence>
       <AnimatePresence>
         {hardcoreGameOver && (
@@ -2140,7 +2376,10 @@ export default function App() {
       </AnimatePresence>
       <AnimatePresence>
         {showStats && (
-          <StatsPanel profile={profile} onClose={() => setShowStats(false)} onLogout={handleLogout} />
+          <StatsPanel profile={profile} onClose={() => setShowStats(false)} onLogout={handleLogout}
+            musicMuted={musicMuted} onToggleMusic={() => setMusicMuted(m => !m)}
+            onShowFeedback={() => setShowFeedback(true)}
+            onShowCastle={() => setShowCastle(true)} />
         )}
       </AnimatePresence>
       <AnimatePresence>
@@ -2185,7 +2424,8 @@ export default function App() {
       <AnimatePresence>
         {castleShop === 'carpentry' && (
           <CarpentryPanel profile={profile} onUpgrade={handleHouseUpgrade}
-            onBuySawmill={handleBuySawmill} onClose={() => setCastleShop(null)} />
+            onBuySawmill={handleBuySawmill} onBuyFenceUpgrade={handleBuyFenceUpgrade}
+            onClose={() => setCastleShop(null)} />
         )}
       </AnimatePresence>
       <AnimatePresence>
@@ -2224,6 +2464,27 @@ export default function App() {
             initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}>
             {toast}
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Tutorial overlay (task 6) */}
+      <AnimatePresence>
+        {showTutorial && profile.tutorialStep !== null && profile.tutorialStep < TUTORIAL_STEPS.length && (
+          <TutorialOverlay
+            step={profile.tutorialStep}
+            onNext={() => {
+              setProfile(prev => {
+                if (!prev) return prev
+                const next = (prev.tutorialStep ?? 0) + 1
+                if (next >= TUTORIAL_STEPS.length) { setShowTutorial(false); return { ...prev, tutorialStep: null } }
+                return { ...prev, tutorialStep: next }
+              })
+            }}
+            onSkip={() => {
+              setShowTutorial(false)
+              setProfile(prev => prev ? { ...prev, tutorialStep: null } : prev)
+            }}
+          />
         )}
       </AnimatePresence>
 
@@ -2314,45 +2575,28 @@ export default function App() {
             )}
             {/* Diamond shop button */}
             <motion.button onClick={() => setShowDiamondShop(true)}
-              className="bg-white/80 backdrop-blur border border-cyan-200 rounded-2xl p-2 shadow text-cyan-500 hover:text-cyan-700"
+              className="bg-white/80 backdrop-blur border border-cyan-200 rounded-2xl p-3 shadow text-cyan-500 hover:text-cyan-700"
               whileTap={{ scale: 0.9 }} title="Buy Diamonds">
-              <span className="text-lg">💎</span>
-            </motion.button>
-            {/* Music toggle button */}
-            <motion.button onClick={() => setMusicMuted(m => !m)}
-              className="bg-white/80 backdrop-blur border border-purple-200 rounded-2xl p-2 shadow text-purple-500 hover:text-purple-700"
-              whileTap={{ scale: 0.9 }} title={musicMuted ? 'Unmute music' : 'Mute music'}>
-              <span className="text-lg">{musicMuted ? '🔇' : '🎵'}</span>
+              <span className="text-xl">💎</span>
             </motion.button>
             {/* Ad button */}
             <motion.button onClick={() => adReady && setShowAd(true)}
               disabled={!adReady}
-              className={`bg-white/80 backdrop-blur border rounded-2xl p-2 shadow text-sm font-bold ${adReady ? 'border-green-200 text-green-600 hover:bg-green-50' : 'border-gray-200 text-gray-300 cursor-not-allowed'}`}
+              className={`bg-white/80 backdrop-blur border rounded-2xl p-3 shadow font-bold ${adReady ? 'border-green-200 text-green-600 hover:bg-green-50' : 'border-gray-200 text-gray-300 cursor-not-allowed'}`}
               whileTap={adReady ? { scale: 0.9 } : {}} title="Watch ad for 2× growth boost">
-              <Tv size={16} />
-            </motion.button>
-            {/* Feedback button */}
-            <motion.button onClick={() => setShowFeedback(true)}
-              className="bg-white/80 backdrop-blur border border-indigo-200 rounded-2xl p-2 shadow text-indigo-500 hover:text-indigo-700"
-              whileTap={{ scale: 0.9 }} title="Send feedback">
-              <MessageSquare size={16} />
-            </motion.button>
-            {/* Castle upgrades button */}
-            <motion.button onClick={() => setShowCastle(true)}
-              className="bg-white/80 backdrop-blur border border-amber-200 rounded-2xl p-2 shadow text-amber-600 hover:text-amber-800"
-              whileTap={{ scale: 0.9 }} title="Castle upgrades">
-              <span className="text-lg">🏰</span>
+              <Tv size={20} />
             </motion.button>
             {/* Wardrobe button */}
             <motion.button onClick={() => setShowWardrobe(true)}
-              className="bg-white/80 backdrop-blur border border-purple-200 rounded-2xl p-2 shadow text-purple-500 hover:text-purple-700"
+              className="bg-white/80 backdrop-blur border border-purple-200 rounded-2xl p-3 shadow text-purple-500 hover:text-purple-700"
               whileTap={{ scale: 0.9 }}>
-              <Shirt size={16} />
+              <Shirt size={20} />
             </motion.button>
+            {/* Profile / Stats button — feedback, castle & music moved inside */}
             <motion.button onClick={() => setShowStats(true)}
-              className="bg-white/80 backdrop-blur border border-gray-200 rounded-2xl p-2 shadow text-gray-500 hover:text-green-600"
+              className="bg-white/80 backdrop-blur border border-gray-200 rounded-2xl p-3 shadow text-gray-500 hover:text-green-600"
               whileTap={{ scale: 0.9 }}>
-              <User size={18} />
+              <User size={22} />
             </motion.button>
           </div>
         </div>
@@ -2435,7 +2679,7 @@ export default function App() {
         </div>
         {(profile.dayCount || 1) <= 1 && (
           <p className="text-center text-xs text-white/70 font-semibold drop-shadow">
-            WASD/arrows to move · Space to jump · E: interact/attack/sleep · Click plot to plant
+            WASD/arrows to move · Right-click drag: rotate camera · Space: jump · E: interact/attack/sleep
           </p>
         )}
       </div>

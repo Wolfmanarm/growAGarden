@@ -17,6 +17,13 @@ const CASTLE_NPCS = [
   { id: 'general',   x:  5, z: 23, color: '#15803d', sign: '🛒 General',   name: 'Maggie' },
 ]
 
+// City villager positions (task 1) — must match CITY_VILLAGERS in App.jsx
+const CITY_VILLAGER_POSITIONS = [
+  { id: 'v1', name: 'Farmer Tom', x: -8, z: 20 },
+  { id: 'v2', name: 'Baker Lily', x:  8, z: 20 },
+  { id: 'v3', name: 'Miller Roy', x:  0, z: 26 },
+]
+
 // All possible wilderness spawn positions (daytime + night extras)
 const ALL_SPAWN_POS = [
   [-4,-20], [4,-22], [-6,-25], [2,-18], [-2,-28], [6,-23],
@@ -1410,8 +1417,11 @@ function Stump({ x, z }) {
   )
 }
 
-function Wilderness({ treeHps, choppedTrees }) {
+function Wilderness({ treeHps, choppedTrees, fenceHp = 10, fenceMaxHp = 10 }) {
   const leafSystemRef = useRef()
+  const fencePct      = fenceMaxHp > 0 ? Math.max(0, fenceHp / fenceMaxHp) : 0
+  const fenceColor    = fencePct > 0.5 ? '#8b5a3c' : fencePct > 0.2 ? '#b45309' : '#dc2626'
+  const fenceBroken   = fenceHp <= 0
   return (
     <group>
       <LeafSystem ref={leafSystemRef} />
@@ -1424,23 +1434,36 @@ function Wilderness({ treeHps, choppedTrees }) {
         <planeGeometry args={[42, 1]}/>
         <meshLambertMaterial color="#422006"/>
       </mesh>
-      {/* Wilderness boundary fence */}
+      {/* Wilderness boundary fence (task 8 — shows damage state) */}
       {Array.from({length: 10}).map((_, i) => {
         const x = (i - 4.5) * 3
+        // Stagger damage: higher indices break first
+        const sectionPct = fencePct - (i / 10) * 0.3
+        const sectionBroken = fenceBroken || sectionPct <= 0
+        if (sectionBroken) return null  // broken section disappears
         return (
           <group key={`fence${i}`} position={[x, 0, WILD_BOUNDARY]}>
             <mesh position={[0, 0.5, 0]} castShadow>
-              <boxGeometry args={[0.1, 1.0, 0.1]}/><meshLambertMaterial color="#8b5a3c"/>
+              <boxGeometry args={[0.1, 1.0, 0.1]}/><meshLambertMaterial color={fenceColor}/>
             </mesh>
             <mesh position={[0, 0.35, 0]} castShadow>
-              <boxGeometry args={[2.8, 0.08, 0.08]}/><meshLambertMaterial color="#8b5a3c"/>
+              <boxGeometry args={[2.8, 0.08, 0.08]}/><meshLambertMaterial color={fenceColor}/>
             </mesh>
             <mesh position={[0, 0.65, 0]} castShadow>
-              <boxGeometry args={[2.8, 0.08, 0.08]}/><meshLambertMaterial color="#a0724d"/>
+              <boxGeometry args={[2.8, 0.08, 0.08]}/><meshLambertMaterial color={fenceColor}/>
             </mesh>
           </group>
         )
       })}
+      {/* Fence HP bar (only at night) */}
+      {!fenceBroken && (
+        <group position={[0, 1.4, WILD_BOUNDARY]}>
+          <mesh><boxGeometry args={[28, 0.2, 0.04]}/><meshLambertMaterial color="#374151"/></mesh>
+          <mesh position={[-(1 - fencePct) * 14, 0, 0.03]} scale={[fencePct, 1, 1]}>
+            <boxGeometry args={[28, 0.2, 0.04]}/><meshLambertMaterial color={fencePct > 0.5 ? '#22c55e' : fencePct > 0.25 ? '#f59e0b' : '#ef4444'}/>
+          </mesh>
+        </group>
+      )}
       {TREE_POSITIONS.map(([x, z], id) =>
         choppedTrees.has(id)
           ? <Stump key={id} x={x} z={z} />
@@ -2078,6 +2101,42 @@ function CastleRamp() {
   )
 }
 
+// ─── Villager character (task 1) ─────────────────────────────────────────────
+function VillagerCharacter({ x, z, name, hp, maxHp }) {
+  const hpPct = hp / maxHp
+  return (
+    <group position={[x, 0, z]}>
+      {/* Legs */}
+      {[-0.1, 0.1].map((lx, i) => (
+        <mesh key={i} position={[lx, 0.28, 0]} castShadow>
+          <boxGeometry args={[0.16, 0.56, 0.16]}/><meshLambertMaterial color="#92400e"/>
+        </mesh>
+      ))}
+      {/* Body */}
+      <mesh position={[0, 0.8, 0]} castShadow>
+        <boxGeometry args={[0.44, 0.50, 0.24]}/><meshLambertMaterial color="#f59e0b"/>
+      </mesh>
+      {/* Head */}
+      <mesh position={[0, 1.22, 0]} castShadow>
+        <boxGeometry args={[0.34, 0.34, 0.30]}/><meshLambertMaterial color="#fde68a"/>
+      </mesh>
+      {/* Eyes */}
+      {[-0.08, 0.08].map((ex, i) => (
+        <mesh key={i} position={[ex, 1.25, 0.16]}>
+          <boxGeometry args={[0.06, 0.06, 0.01]}/><meshLambertMaterial color="#1e293b"/>
+        </mesh>
+      ))}
+      {/* HP bar */}
+      <group position={[0, 1.75, 0]}>
+        <mesh><boxGeometry args={[0.7, 0.1, 0.04]}/><meshLambertMaterial color="#374151"/></mesh>
+        <mesh position={[-(1 - hpPct) * 0.35, 0, 0.03]} scale={[hpPct, 1, 1]}>
+          <boxGeometry args={[0.7, 0.1, 0.04]}/><meshLambertMaterial color="#22c55e"/>
+        </mesh>
+      </group>
+    </group>
+  )
+}
+
 // ─── Camera + movement ────────────────────────────────────────────────────────
 const _camTarget    = new THREE.Vector3()
 const _lookAt       = new THREE.Vector3()
@@ -2100,7 +2159,9 @@ const SHOP_AABBS = CASTLE_NPCS.map(npc => ({
 function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEnter,
                      dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep,
                      attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward,
-                     respawnSignal, onMessage, shopOpen }) {
+                     respawnSignal, onMessage, shopOpen,
+                     wildFenceMaxHp = 10, villagers = { v1: true, v2: true, v3: true },
+                     onVillagerKilled }) {
   const playerRef    = useRef()
   const playerPos    = useRef(new THREE.Vector3(0, 0, 6))
   const [nearestPlotIdx, setNearestPlotIdx] = useState(-1)
@@ -2115,6 +2176,20 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
   const nearRef      = useRef(false)
   const swingRef     = useRef(0)
   const ambientRef   = useRef()
+  // Roblox-style camera (task 5)
+  const cameraYawRef   = useRef(Math.PI)  // camera horizontal angle
+  const camPitchRef    = useRef(0.67)     // camera vertical angle (radians above horizontal)
+  const camDistRef     = useRef(7)        // camera distance from player (zoom)
+  const camDragRef     = useRef(false)
+  const lastMouseRef   = useRef({ x: 0, y: 0 })
+  // Wilderness fence (task 8)
+  const [wildFenceHp, setWildFenceHp] = useState(wildFenceMaxHp)
+  const wildFenceHpRef  = useRef(wildFenceMaxHp)
+  const wildFenceMaxRef = useRef(wildFenceMaxHp)
+  // Villager HP (task 1)
+  const [villagerHps, setVillagerHps] = useState(() => Object.fromEntries(CITY_VILLAGER_POSITIONS.map(v => [v.id, 3])))
+  const villagerHpsRef  = useRef(Object.fromEntries(CITY_VILLAGER_POSITIONS.map(v => [v.id, 3])))
+  const villagerHitRef  = useRef({})  // per-villager last hit time
   const totalCols    = 5 + (profile?.extraRows || 0)
 
   // Keep latest prop values accessible inside useFrame without stale closures
@@ -2169,8 +2244,35 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       setTreeHps(freshHps)
       choppedRef.current = new Set()
       setChoppedTrees(new Set())
+      // Repair wilderness fence every morning (task 8)
+      wildFenceHpRef.current = wildFenceMaxRef.current
+      setWildFenceHp(wildFenceMaxRef.current)
     }
   }, [dayPhase])
+
+  // Keep wildFenceMaxRef in sync with prop (task 8/9)
+  useEffect(() => { wildFenceMaxRef.current = wildFenceMaxHp }, [wildFenceMaxHp])
+
+  // Sync villager alive state from profile prop (task 1)
+  const villagersRef = useRef(villagers)
+  useEffect(() => { villagersRef.current = villagers }, [villagers])
+
+  // Reset villager HPs when they respawn (villager goes from dead → alive in prop)
+  useEffect(() => {
+    setVillagerHps(prev => {
+      const next = { ...prev }
+      for (const v of CITY_VILLAGER_POSITIONS) {
+        if (villagers[v.id] && prev[v.id] === 0) next[v.id] = 3  // respawned
+      }
+      return next
+    })
+    // Also reset refs
+    for (const v of CITY_VILLAGER_POSITIONS) {
+      if (villagers[v.id] && villagerHpsRef.current[v.id] === 0) {
+        villagerHpsRef.current[v.id] = 3
+      }
+    }
+  }, [villagers])
 
   // Tree chopping state
   const [treeHps, setTreeHps]       = useState(() => Object.fromEntries(TREE_POSITIONS.map((_, i) => [i, TREE_MAX_HP])))
@@ -2199,6 +2301,36 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     window.addEventListener('keydown', down)
     window.addEventListener('keyup',   up)
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up) }
+  }, [])
+
+  // Roblox-style camera: right-click drag rotates camera yaw (task 5)
+  useEffect(() => {
+    const onMouseDown = e => { if (e.button === 2) { camDragRef.current = true; lastMouseRef.current = { x: e.clientX, y: e.clientY } } }
+    const onMouseUp   = e => { if (e.button === 2) camDragRef.current = false }
+    const onMouseMove = e => {
+      if (!camDragRef.current) return
+      const dx = e.clientX - lastMouseRef.current.x
+      const dy = e.clientY - lastMouseRef.current.y
+      cameraYawRef.current -= dx * 0.006
+      camPitchRef.current = Math.max(0.1, Math.min(1.4, camPitchRef.current + dy * 0.006))
+      lastMouseRef.current = { x: e.clientX, y: e.clientY }
+    }
+    const onWheel = e => {
+      camDistRef.current = Math.max(3, Math.min(20, camDistRef.current + e.deltaY * 0.01))
+    }
+    const noCtx = e => e.preventDefault()
+    window.addEventListener('mousedown', onMouseDown)
+    window.addEventListener('mouseup',   onMouseUp)
+    window.addEventListener('mousemove', onMouseMove)
+    window.addEventListener('wheel',     onWheel)
+    window.addEventListener('contextmenu', noCtx)
+    return () => {
+      window.removeEventListener('mousedown', onMouseDown)
+      window.removeEventListener('mouseup',   onMouseUp)
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('wheel',     onWheel)
+      window.removeEventListener('contextmenu', noCtx)
+    }
   }, [])
 
   useEffect(() => {
@@ -2387,19 +2519,26 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       ambientRef.current.intensity += (target - ambientRef.current.intensity) * 0.04
     }
 
-    // ── Player movement ──────────────────────────────────────────────────────
-    const turnLeft  = keys.current['KeyA'] || keys.current['ArrowLeft']
-    const turnRight = keys.current['KeyD'] || keys.current['ArrowRight']
-    const fwd       = keys.current['KeyW'] || keys.current['ArrowUp']
-    const back      = keys.current['KeyS'] || keys.current['ArrowDown']
+    // ── Player movement — Roblox-style (task 5) ─────────────────────────────
+    // WASD moves relative to camera direction; right-click drag rotates camera
+    const fwd   = keys.current['KeyW'] || keys.current['ArrowUp']
+    const back  = keys.current['KeyS'] || keys.current['ArrowDown']
+    const left  = keys.current['KeyA'] || keys.current['ArrowLeft']
+    const right = keys.current['KeyD'] || keys.current['ArrowRight']
 
-    if (turnLeft)  playerRot.current += TURN_SPEED * delta
-    if (turnRight) playerRot.current -= TURN_SPEED * delta
+    const camYaw = cameraYawRef.current
+    let moveX = 0, moveZ = 0
+    if (fwd)   { moveX += Math.sin(camYaw);  moveZ += Math.cos(camYaw) }
+    if (back)  { moveX -= Math.sin(camYaw);  moveZ -= Math.cos(camYaw) }
+    if (left)  { moveX += Math.cos(camYaw);  moveZ -= Math.sin(camYaw) }
+    if (right) { moveX -= Math.cos(camYaw);  moveZ += Math.sin(camYaw) }
 
-    let moveDir = 0
-    if (fwd)  moveDir += 1
-    if (back) moveDir -= 1
-    movingRef.current = moveDir !== 0
+    const moveMag = Math.sqrt(moveX * moveX + moveZ * moveZ)
+    movingRef.current = moveMag > 0.01
+    // Player model faces direction of movement
+    if (moveMag > 0.01) playerRot.current = Math.atan2(moveX / moveMag, moveZ / moveMag)
+
+    let moveDir = moveMag > 0.01 ? 1 : 0
 
     // Jump from current surface level
     const currentGroundY = getGroundY(playerPos.current.x, playerPos.current.z, playerPos.current.y)
@@ -2414,9 +2553,10 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
     if (playerPos.current.y <= targetGndY) jumpVel.current = 0
 
     if (moveDir !== 0) {
-      const r    = playerRot.current
-      let newX   = playerPos.current.x + Math.sin(r) * moveDir * MOVE_SPEED * delta
-      let newZ   = playerPos.current.z + Math.cos(r) * moveDir * MOVE_SPEED * delta
+      const nx   = moveMag > 0.01 ? moveX / moveMag : Math.sin(playerRot.current)
+      const nz   = moveMag > 0.01 ? moveZ / moveMag : Math.cos(playerRot.current)
+      let newX   = playerPos.current.x + nx * MOVE_SPEED * delta
+      let newZ   = playerPos.current.z + nz * MOVE_SPEED * delta
 
       // Extended world bounds (task 3: 4× the previous east/west limit)
       const farmEastBound = (totalColsRef.current - 3) * PLOT_SPACING + 4
@@ -2634,10 +2774,55 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
             gateHpRef.current = newGateHp
             setGateHp(newGateHp)
           }
+        } else if (!gateIntact && z.z > CASTLE_WALL_Z_FRONT) {
+          // Gate broken, zombie inside city — attack nearest alive villager (task 1)
+          let nearestVillager = null, nearestVDist = Infinity
+          for (const v of CITY_VILLAGER_POSITIONS) {
+            if (!villagersRef.current[v.id]) continue  // villager already dead
+            if ((villagerHpsRef.current[v.id] || 0) <= 0) continue
+            const vd = Math.sqrt((z.x - v.x) ** 2 + (z.z - v.z) ** 2)
+            if (vd < nearestVDist) { nearestVDist = vd; nearestVillager = v }
+          }
+          if (nearestVillager && nearestVDist > HIT_DIST) {
+            const vdx = nearestVillager.x - z.x, vdz = nearestVillager.z - z.z
+            const vd = Math.sqrt(vdx * vdx + vdz * vdz)
+            z.x += (vdx / vd) * ZOMBIE_SPEED * delta
+            z.z += (vdz / vd) * ZOMBIE_SPEED * delta
+          } else if (nearestVillager && nearestVDist <= HIT_DIST) {
+            // Attack the villager
+            if (now - (z._villagerHit || 0) > 1500) {
+              z._villagerHit = now
+              const vid = nearestVillager.id
+              const newHp = Math.max(0, (villagerHpsRef.current[vid] || 0) - 1)
+              villagerHpsRef.current[vid] = newHp
+              setVillagerHps(prev => ({ ...prev, [vid]: newHp }))
+              if (newHp === 0) {
+                onVillagerKilled?.(vid)
+              }
+            }
+          } else if (dist > HIT_DIST) {
+            // No villagers left — chase player
+            z.x += (dx / dist) * ZOMBIE_SPEED * delta
+            z.z += (dz / dist) * ZOMBIE_SPEED * delta
+          }
         } else if (dist > HIT_DIST) {
           // Night: chase player
           z.x += (dx / dist) * ZOMBIE_SPEED * delta
           z.z += (dz / dist) * ZOMBIE_SPEED * delta
+        }
+
+        // Wilderness fence collision at night (task 8)
+        const fenceOpen = wildFenceHpRef.current <= 0
+        if (!fenceOpen && z.z >= WILD_BOUNDARY - 0.5) {
+          // Block zombie at fence
+          z.z = WILD_BOUNDARY - 0.6
+          // Each zombie attacks fence with a per-zombie cooldown
+          if (now - (z._fenceHit || 0) > 2500) {
+            z._fenceHit = now
+            const newFenceHp = Math.max(0, wildFenceHpRef.current - 1)
+            wildFenceHpRef.current = newFenceHp
+            setWildFenceHp(newFenceHp)
+          }
         }
 
         // Wall collision for night zombies — prevent crossing castle walls
@@ -2970,10 +3155,13 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       }
     }
 
-    // ── Third-person camera ───────────────────────────────────────────────────
-    const a = playerRot.current
-    smoothCamYRef.current += (playerPos.current.y + 5.5 - smoothCamYRef.current) * 0.05
-    _camTarget.set(px - Math.sin(a) * 7, smoothCamYRef.current, pz - Math.cos(a) * 7)
+    // ── Third-person Roblox-style camera (task 5) ────────────────────────────
+    const a     = cameraYawRef.current
+    const pitch = camPitchRef.current
+    const d     = camDistRef.current
+    const hDist = Math.cos(pitch) * d
+    const vDist = Math.sin(pitch) * d
+    _camTarget.set(px - Math.sin(a) * hDist, playerPos.current.y + vDist, pz - Math.cos(a) * hDist)
     camera.position.lerp(_camTarget, 0.07)
     _lookAt.set(px, playerPos.current.y + 1.4, pz)
     camera.lookAt(_lookAt)
@@ -3005,9 +3193,16 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
       <Clouds/>
       <Fence totalCols={totalCols}/>
       <House3D onEnter={onHouseEnter} houseLevel={profile?.houseLevel || 0}/>
-      <Wilderness treeHps={treeHps} choppedTrees={choppedTrees}/>
+      <Wilderness treeHps={treeHps} choppedTrees={choppedTrees} fenceHp={wildFenceHp} fenceMaxHp={wildFenceMaxHp}/>
       <CastleCity gateHp={gateHp}/>
       <CastleRamp/>
+
+      {/* City villagers (task 1) */}
+      {CITY_VILLAGER_POSITIONS.map(v => {
+        const alive  = villagersRef.current[v.id] && (villagerHpsRef.current[v.id] || 0) > 0
+        const hp     = villagerHps[v.id] ?? 3
+        return alive ? <VillagerCharacter key={v.id} x={v.x} z={v.z} name={v.name} hp={hp} maxHp={3}/> : null
+      })}
 
       {/* Archer watch towers (only when archers upgrade is owned) */}
       {profile?.castleUpgrades?.archers && TOWER_POSITIONS.map(([tx, tz], i) => (
@@ -3040,7 +3235,8 @@ function GameScene({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEn
 export default function Garden3D({ plots, onPlotClick, profile, outfit, onNearHouse, onHouseEnter,
                                    dayPhase, onPlayerDamaged, onTalkToNpc, onNearNpc, onSleep,
                                    attackDamage, weaponRange, equipSource, chopDamage, onTreeChopped, treeBaseReward,
-                                   respawnSignal, onMessage, shopOpen }) {
+                                   respawnSignal, onMessage, shopOpen,
+                                   wildFenceMaxHp = 10, villagers, onVillagerKilled }) {
   return (
     <Canvas shadows camera={{position:[0,8,13],fov:55}} style={{width:'100%',height:'100%',display:'block'}}>
       <GameScene plots={plots} onPlotClick={onPlotClick} profile={profile}
@@ -3048,7 +3244,8 @@ export default function Garden3D({ plots, onPlotClick, profile, outfit, onNearHo
         dayPhase={dayPhase} onPlayerDamaged={onPlayerDamaged} onTalkToNpc={onTalkToNpc}
         onNearNpc={onNearNpc} onSleep={onSleep} attackDamage={attackDamage} weaponRange={weaponRange}
         equipSource={equipSource} chopDamage={chopDamage} onTreeChopped={onTreeChopped} treeBaseReward={treeBaseReward}
-        respawnSignal={respawnSignal} onMessage={onMessage} shopOpen={shopOpen}/>
+        respawnSignal={respawnSignal} onMessage={onMessage} shopOpen={shopOpen}
+        wildFenceMaxHp={wildFenceMaxHp} villagers={villagers} onVillagerKilled={onVillagerKilled}/>
     </Canvas>
   )
 }
